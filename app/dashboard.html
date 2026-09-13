@@ -3,77 +3,124 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Denial worklist</title>
+<title>Recourse — worklist</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root {
-    --paper: #F5F6F3; --ink: #1E2530; --muted: #6B7280; --rule: #D9DCD6; --row: #FFFFFF;
-    --appeal: #0F6E64; --resubmit: #2A4B8D; --writeoff: #9A3B1E; --escalate: #9C6A00; --noop: #7A7F87; --ok: #1F7A3A;
+    --violet: #5B3DF5; --violet-deep: #3B22B8; --pink: #E23A8C; --teal: #0E8A7B; --amber: #D98A0B; --grey: #7A7C88; --ok: #1E9E6A;
+    --ink: #17171D; --muted: #5F6170; --canvas: #F5F5F7; --card: #FFFFFF; --rule: #E6E6EC;
   }
   * { box-sizing: border-box; }
-  body { margin: 0; background: var(--paper); color: var(--ink); font: 15px/1.45 "Source Sans 3", "Segoe UI", system-ui, sans-serif; font-variant-numeric: tabular-nums; }
-  header { display: flex; align-items: baseline; gap: 20px; padding: 22px 28px 14px; border-bottom: 1px solid var(--rule); }
-  header h1 { margin: 0; font-size: 22px; font-weight: 600; letter-spacing: -0.01em; }
-  header .env { color: var(--muted); font-size: 13px; }
-  header .spacer { flex: 1; }
-  .counts { display: flex; gap: 18px; color: var(--muted); font-size: 13px; }
-  .counts b { color: var(--ink); font-size: 18px; font-weight: 600; margin-right: 4px; }
-  .bar { display: flex; gap: 10px; align-items: center; padding: 12px 28px; border-bottom: 1px solid var(--rule); flex-wrap: wrap; }
-  button, select { font: inherit; padding: 6px 12px; border: 1px solid var(--ink); background: var(--row); color: var(--ink); border-radius: 3px; cursor: pointer; }
-  button:hover { background: #ECEEE9; }
-  button.primary { background: var(--ink); color: #fff; }
-  button.primary:hover { background: #333B48; }
-  button.approve { border-color: var(--ok); color: var(--ok); }
-  button.reject { border-color: var(--writeoff); color: var(--writeoff); }
-  button:focus-visible, select:focus-visible { outline: 2px solid var(--resubmit); outline-offset: 2px; }
+  body { margin: 0; background: var(--canvas); color: var(--ink); font: 15px/1.5 Inter, system-ui, sans-serif; font-variant-numeric: tabular-nums; -webkit-font-smoothing: antialiased; }
+  a { color: inherit; text-decoration: none; }
+  nav { display: flex; align-items: center; gap: 22px; padding: 14px 32px; background: #fff; border-bottom: 1px solid var(--rule); position: sticky; top: 0; z-index: 5; }
+  .logo { display: inline-flex; align-items: center; gap: 10px; font-weight: 800; font-size: 18px; letter-spacing: -0.02em; }
+  .logo i { width: 30px; height: 30px; border-radius: 9px; background: var(--violet); display: inline-grid; place-items: center; color: #fff; font-style: normal; font-weight: 800; }
+  nav .env { color: var(--muted); font-size: 13px; }
+  nav .spacer { flex: 1; }
+  .btn { display: inline-flex; align-items: center; gap: 8px; padding: 9px 16px; border-radius: 999px; font: inherit; font-weight: 600; font-size: 14px; border: 1.5px solid transparent; cursor: pointer; background: #fff; color: var(--ink); border-color: var(--rule); transition: transform .12s ease, box-shadow .12s ease; }
+  .btn:hover { transform: translateY(-1px); border-color: #CFCFDA; }
+  .btn.primary { background: var(--violet); color: #fff; box-shadow: 0 8px 20px rgba(91,61,245,.22); }
+  .btn.ghost { border-color: var(--violet); color: var(--violet); }
+  .btn.approve { background: var(--ok); color: #fff; border-color: transparent; }
+  .btn.reject { color: var(--pink); border-color: var(--pink); }
+  .btn.help { width: 36px; height: 36px; padding: 0; justify-content: center; border-radius: 999px; font-weight: 800; }
+  .btn:focus-visible, select:focus-visible { outline: 2px solid var(--violet); outline-offset: 2px; }
+  select { font: inherit; font-size: 14px; padding: 9px 12px; border-radius: 12px; border: 1.5px solid var(--rule); background: #fff; color: var(--ink); }
+  .strip { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; max-width: 1240px; margin: 22px auto 0; padding: 0 32px; }
+  .kpi { background: #fff; border: 1px solid var(--rule); border-radius: 18px; padding: 16px 18px; }
+  .kpi b { display: block; font-size: 26px; letter-spacing: -0.03em; font-weight: 800; }
+  .kpi span { color: var(--muted); font-size: 13px; }
+  .kpi.v b { color: var(--violet-deep); } .kpi.p b { color: var(--pink); } .kpi.t b { color: var(--teal); } .kpi.a b { color: var(--amber); }
+  .bar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; max-width: 1240px; margin: 18px auto 0; padding: 0 32px; }
   #status { color: var(--muted); font-size: 13px; margin-left: auto; }
-  main { padding: 8px 28px 40px; max-width: 1180px; }
+  .filters { display: flex; gap: 8px; flex-wrap: wrap; max-width: 1240px; margin: 14px auto 0; padding: 0 32px; }
+  .chip { padding: 6px 12px; border-radius: 999px; border: 1.5px solid var(--rule); background: #fff; font: inherit; font-size: 13px; font-weight: 600; color: var(--muted); cursor: pointer; }
+  .chip.on { background: var(--ink); color: #fff; border-color: var(--ink); }
+  main { max-width: 1240px; margin: 0 auto; padding: 8px 32px 60px; }
   .empty { padding: 60px 0; color: var(--muted); }
   .empty b { color: var(--ink); }
-  .plan { display: grid; grid-template-columns: 150px 1fr auto; gap: 18px; align-items: start; background: var(--row); border: 1px solid var(--rule); border-radius: 4px; padding: 14px 16px; margin-top: 10px; }
-  .stamp { display: inline-block; padding: 5px 9px; border: 2px solid var(--noop); color: var(--noop); border-radius: 3px; font-weight: 700; font-size: 14px; transform: rotate(-2deg); transform-origin: left center; }
-  .stamp.appeal { border-color: var(--appeal); color: var(--appeal); }
-  .stamp.correct_resubmit { border-color: var(--resubmit); color: var(--resubmit); }
-  .stamp.write_off { border-color: var(--writeoff); color: var(--writeoff); }
-  .stamp.escalate, .stamp.escalate_physician { border-color: var(--escalate); color: var(--escalate); }
-  .stamp.close_duplicate, .stamp.patient_responsibility { border-color: var(--noop); color: var(--noop); }
-  .who { font-weight: 600; }
-  .meta { color: var(--muted); font-size: 13px; margin-top: 2px; }
-  .reason { margin-top: 8px; max-width: 72ch; }
-  .urgent { color: var(--writeoff); font-weight: 600; }
-  details { margin-top: 8px; }
-  summary { cursor: pointer; color: var(--resubmit); font-size: 13px; }
-  .trace { margin: 6px 0 0; padding-left: 18px; font-size: 13px; color: var(--muted); }
-  .trace li { margin: 2px 0; }
-  pre { background: var(--paper); border: 1px solid var(--rule); padding: 10px 12px; font: 12.5px/1.45 ui-monospace, SFMono-Regular, Menlo, monospace; white-space: pre-wrap; margin: 6px 0 0; max-width: 90ch; }
-  .actions { display: flex; flex-direction: column; gap: 6px; min-width: 150px; }
-  .state { font-size: 13px; color: var(--muted); }
-  .state.executed { color: var(--ok); } .state.failed { color: var(--writeoff); } .state.rejected { color: var(--writeoff); }
+  .plan { display: grid; grid-template-columns: 170px 1fr 220px; gap: 20px; align-items: start; background: var(--card); border: 1px solid var(--rule); border-radius: 18px; padding: 18px 20px; margin-top: 12px; box-shadow: 0 10px 28px rgba(23,23,29,.04); }
+  .stamp { display: inline-block; padding: 6px 12px; border-radius: 10px; font-weight: 700; font-size: 13px; background: #EEEEF2; color: var(--grey); }
+  .stamp.appeal { background: #EEE9FF; color: var(--violet-deep); }
+  .stamp.correct_resubmit { background: #E3F5F2; color: #0A6B5F; }
+  .stamp.write_off { background: #FFE6F1; color: #A8145C; }
+  .stamp.escalate, .stamp.escalate_physician { background: #FFF3DD; color: #9C5A00; }
+  .urgent { color: var(--pink); font-weight: 700; font-size: 12px; margin-top: 8px; }
+  .who { font-weight: 700; font-size: 16px; }
+  .meta { color: var(--muted); font-size: 13px; margin-top: 3px; }
+  .reason { margin-top: 10px; max-width: 74ch; }
+  details { margin-top: 10px; }
+  summary { cursor: pointer; color: var(--violet); font-size: 13px; font-weight: 600; }
+  .trace { margin: 8px 0 0; padding-left: 18px; font-size: 13px; color: var(--muted); }
+  .trace li { margin: 3px 0; }
+  pre { background: var(--canvas); border: 1px solid var(--rule); border-radius: 12px; padding: 12px 14px; font: 12.5px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; white-space: pre-wrap; margin: 8px 0 0; max-width: 92ch; }
+  .actions { display: flex; flex-direction: column; gap: 8px; }
+  .state { font-size: 13px; color: var(--muted); font-weight: 600; }
+  .state.executed { color: var(--ok); } .state.failed, .state.rejected { color: var(--pink); } .state.awaiting_approval { color: var(--violet); }
   .steps { list-style: none; padding: 0; margin: 4px 0 0; font-size: 12.5px; color: var(--muted); }
   .steps li::before { content: "·"; margin-right: 6px; }
-  .steps li.done::before { content: "✓"; color: var(--ok); } .steps li.failed::before { content: "✕"; color: var(--writeoff); } .steps li.skipped::before { content: "–"; }
-  @media (max-width: 760px) { .plan { grid-template-columns: 1fr; } .actions { flex-direction: row; flex-wrap: wrap; } }
-  @media (prefers-reduced-motion: no-preference) { .plan.new { animation: in 320ms ease-out; } @keyframes in { from { background: #EAF4F1; } to { background: var(--row); } } }
+  .steps li.done::before { content: "✓"; color: var(--ok); } .steps li.failed::before { content: "✕"; color: var(--pink); } .steps li.skipped::before { content: "–"; }
+  /* tour */
+  .tour-back { position: fixed; inset: 0; background: rgba(23,23,29,.45); z-index: 20; display: none; }
+  .tour { position: fixed; z-index: 21; width: 380px; max-width: calc(100vw - 32px); background: #fff; border-radius: 18px; padding: 20px 22px; box-shadow: 0 30px 70px rgba(23,23,29,.28); display: none; }
+  .tour h3 { margin: 0 0 6px; font-size: 17px; letter-spacing: -0.01em; }
+  .tour p { margin: 0 0 14px; color: var(--muted); font-size: 14px; }
+  .tour .nav { display: flex; align-items: center; gap: 8px; }
+  .tour .dots { flex: 1; color: var(--muted); font-size: 12px; }
+  .spot { position: relative; z-index: 22; box-shadow: 0 0 0 4px var(--violet), 0 0 0 9px rgba(91,61,245,.25); border-radius: 14px; }
+  @media (max-width: 860px) { .plan { grid-template-columns: 1fr; } .actions { flex-direction: row; flex-wrap: wrap; } .strip { grid-template-columns: 1fr 1fr; } nav, .strip, .bar, .filters, main { padding-left: 16px; padding-right: 16px; } }
+  @media (prefers-reduced-motion: no-preference) { .plan.new { animation: in 420ms ease-out; } @keyframes in { from { background: #EEE9FF; } to { background: var(--card); } } }
 </style>
 </head>
 <body>
-<header>
-  <h1>Denial worklist</h1>
+<nav>
+  <a class="logo" href="/"><i>R</i>Recourse</a>
   <span class="env" id="env">connecting…</span>
   <span class="spacer"></span>
-  <div class="counts"><span><b id="c-await">0</b>awaiting approval</span><span><b id="c-done">0</b>executed</span><span><b id="c-esc">0</b>escalated</span><span><b id="c-fail">0</b>failed</span></div>
-</header>
+  <a class="btn" href="/eval">Eval results</a>
+  <button class="btn help" id="helpBtn" title="Show the tour" aria-label="Show the tour">?</button>
+</nav>
+<div class="strip">
+  <div class="kpi v" id="k-await"><b>0</b><span>awaiting approval</span></div>
+  <div class="kpi t" id="k-money"><b>$0</b><span>at stake in pending plans</span></div>
+  <div class="kpi a" id="k-esc"><b>0</b><span>escalated to a human</span></div>
+  <div class="kpi p" id="k-done"><b>0</b><span>executed</span></div>
+</div>
 <div class="bar">
-  <button class="primary" onclick="call('POST','/poll','Polled inbox')">Poll inbox</button>
-  <button onclick="call('POST','/slack/poll-reactions','Applied Slack reactions')">Apply Slack reactions</button>
-  <select id="fixture"></select>
-  <button onclick="ingestFixture()">Ingest fixture</button>
-  <button onclick="call('POST','/report/slack','Posted summary to Slack')">Post summary to Slack</button>
+  <button class="btn primary" id="pollBtn" onclick="call('POST','/poll','Polled inbox')">Poll inbox</button>
+  <button class="btn" onclick="call('POST','/slack/poll-reactions','Applied Slack reactions')">Apply Slack reactions</button>
+  <select id="fixture" aria-label="Fixture denial"></select>
+  <button class="btn" id="ingestBtn" onclick="ingestFixture()">Ingest fixture</button>
+  <button class="btn" onclick="call('POST','/report/slack','Posted summary to Slack')">Post summary to Slack</button>
   <span id="status"></span>
 </div>
-<main id="list"><div class="empty"><b>No denials worked yet.</b> Poll the inbox, or ingest a fixture to see a plan.</div></main>
+<div class="filters" id="filters">
+  <button class="chip on" data-f="all">All</button>
+  <button class="chip" data-f="awaiting_approval">Awaiting approval</button>
+  <button class="chip" data-f="executed">Executed</button>
+  <button class="chip" data-f="escalate">Escalated</button>
+  <button class="chip" data-f="write_off">Write-offs</button>
+  <button class="chip" data-f="failed">Failed / rejected</button>
+</div>
+<main id="list"><div class="empty"><b>No denials worked yet.</b> Poll the inbox, or pick a fixture and ingest it to watch the agent decide.</div></main>
 <script>
 const $ = s => document.querySelector(s);
 let seen = new Set();
+let filter = 'all';
+let latest = [];
+document.querySelectorAll('#filters .chip').forEach(c => c.addEventListener('click', () => {
+  document.querySelectorAll('#filters .chip').forEach(x => x.classList.remove('on')); c.classList.add('on');
+  filter = c.dataset.f; render(latest);
+}));
+function matches(p) {
+  if (filter === 'all') return true;
+  if (filter === 'escalate') return p.decision.type.startsWith('escalate');
+  if (filter === 'failed') return p.status === 'failed' || p.status === 'rejected';
+  if (filter === 'write_off') return p.decision.type === 'write_off';
+  return p.status === filter;
+}
 async function api(method, path, body) {
   const r = await fetch(path, { method, headers: body ? {'content-type':'application/json'} : {}, body: body ? JSON.stringify(body) : undefined });
   if (!r.ok) throw new Error(`${method} ${path}: ${r.status} ${await r.text()}`);
@@ -87,22 +134,25 @@ function esc(s) { return (s ?? '').toString().replace(/[&<>"]/g, c => ({'&':'&am
 function money(v) { return v == null ? '' : '$' + Number(v).toLocaleString(undefined, {minimumFractionDigits: 2}); }
 function render(plans) {
   const list = $('#list');
+  latest = plans;
   if (!plans.length) return;
   plans.sort((a, b) => (b.created_at || 0) - (a.created_at || 0));
-  const counts = {await: 0, done: 0, esc: 0, fail: 0};
-  list.innerHTML = plans.map(p => {
-    const d = p.decision, dn = p.denial;
-    if (p.status === 'awaiting_approval') counts.await++;
+  const counts = {await: 0, done: 0, esc: 0, money: 0};
+  for (const p of plans) {
+    if (p.status === 'awaiting_approval') { counts.await++; counts.money += Number(p.denial.denied_amount || 0); }
     if (p.status === 'executed') counts.done++;
-    if (p.status === 'failed') counts.fail++;
-    if (d.type.startsWith('escalate')) counts.esc++;
+    if (p.decision.type.startsWith('escalate')) counts.esc++;
+  }
+  const shown = plans.filter(matches);
+  list.innerHTML = shown.length ? shown.map(p => {
+    const d = p.decision, dn = p.denial;
     const isNew = !seen.has(p.plan_id); seen.add(p.plan_id);
     const stamp = d.type.replace(/_/g, ' ');
     const trace = (d.rule_trace || []).map(r => `<li>${esc(r)}</li>`).join('');
     const steps = (p.actions || []).map(a => `<li class="${a.status}">${a.type.replace(/_/g, ' ')}${a.attempts > 1 ? ` (${a.attempts} attempts)` : ''}${a.error ? ' — ' + esc(a.error) : ''}</li>`).join('');
     const deadline = d.appeal_deadline ? `deadline ${d.appeal_deadline}${d.days_to_deadline != null ? ` (${d.days_to_deadline} days)` : ''}` : '';
     const buttons = p.status === 'awaiting_approval'
-      ? `<button class="approve" onclick="decide('${p.plan_id}','approve')">Approve and execute</button><button class="reject" onclick="decide('${p.plan_id}','reject')">Reject</button>`
+      ? `<button class="btn approve" onclick="decide('${p.plan_id}','approve')">Approve and execute</button><button class="btn reject" onclick="decide('${p.plan_id}','reject')">Reject</button>`
       : '';
     return `<article class="plan ${isNew ? 'new' : ''}">
       <div><span class="stamp ${d.type}">${esc(stamp)}</span>${d.urgent ? '<div class="urgent">urgent</div>' : ''}</div>
@@ -119,8 +169,9 @@ function render(plans) {
         ${steps ? `<ul class="steps">${steps}</ul>` : ''}
       </div>
     </article>`;
-  }).join('');
-  $('#c-await').textContent = counts.await; $('#c-done').textContent = counts.done; $('#c-esc').textContent = counts.esc; $('#c-fail').textContent = counts.fail;
+  }).join('') : '<div class="empty">Nothing matches this filter.</div>';
+  $('#k-await b').textContent = counts.await; $('#k-done b').textContent = counts.done; $('#k-esc b').textContent = counts.esc;
+  $('#k-money b').textContent = money(counts.money);
 }
 async function refresh() {
   try {
@@ -132,6 +183,44 @@ async function refresh() {
 (async () => {
   try { const fx = await api('GET', '/fixtures'); $('#fixture').innerHTML = fx.map(f => `<option>${f}</option>`).join(''); } catch (e) {}
   await refresh(); setInterval(refresh, 3000);
+})();
+
+// ---------------- guided tour (first visit, or the ? button)
+const TOUR = [
+  { el: null, title: 'This is the denial worklist', text: 'Every card is one denied claim the agent has worked: the decision, the rules that fired, and the letter it drafted. Nothing here has been sent to a payer until a human approves it.' },
+  { el: '#pollBtn', title: 'Denials come from the inbox', text: 'Poll inbox reads the practice\'s Gmail. In this sandbox, pick a fixture denial from the dropdown and ingest it to watch the agent work one on demand.' },
+  { el: '#ingestBtn', title: 'Try one now', text: 'D-03 is a clean appeal. D-04 is the same code with a thin note, so the agent refuses to appeal and routes to the physician. D-13 is a closed appeal window. D-15 is a newsletter that should be ignored.' },
+  { el: '.plan', title: 'Read the card', text: 'The stamp is the decision. Expand "Rules that fired" to see the deterministic cascade, and the letter to see what would be sent. Amounts, deadlines and duplicates are decided by rules; the model only reads the note against the policy.' },
+  { el: '.plan .actions', title: 'You sign anything irreversible', text: 'Approve here or in Slack. Then the letter is saved to Drive, emailed, the deadline is booked, the ledger row is updated, and each step ticks off on the right.' },
+];
+let ti = 0, spotEl = null;
+const back = document.createElement('div'); back.className = 'tour-back'; document.body.appendChild(back);
+const box = document.createElement('div'); box.className = 'tour'; box.setAttribute('role', 'dialog'); document.body.appendChild(box);
+function endTour() { back.style.display = box.style.display = 'none'; if (spotEl) spotEl.classList.remove('spot'); spotEl = null; try { localStorage.setItem('recourse.tour', 'done'); } catch (e) {} }
+function showStep(i) {
+  ti = Math.max(0, Math.min(TOUR.length - 1, i)); const st = TOUR[ti];
+  if (spotEl) spotEl.classList.remove('spot');
+  spotEl = st.el ? document.querySelector(st.el) : null;
+  box.innerHTML = `<h3>${st.title}</h3><p>${st.text}</p><div class="nav"><span class="dots">${ti + 1} of ${TOUR.length}</span>
+    ${ti > 0 ? '<button class="btn" id="tPrev">Back</button>' : ''}
+    <button class="btn primary" id="tNext">${ti === TOUR.length - 1 ? 'Done' : 'Next'}</button></div>`;
+  back.style.display = box.style.display = 'block';
+  if (spotEl) { spotEl.classList.add('spot'); spotEl.scrollIntoView({ block: 'center', behavior: 'smooth' }); const r = spotEl.getBoundingClientRect(); const top = Math.min(window.innerHeight - 220, r.bottom + 14); box.style.top = top + 'px'; box.style.left = Math.max(16, Math.min(window.innerWidth - 400, r.left)) + 'px'; }
+  else { box.style.top = '110px'; box.style.left = 'calc(50% - 190px)'; }
+  $('#tNext').onclick = () => (ti === TOUR.length - 1 ? endTour() : showStep(ti + 1));
+  const pv = $('#tPrev'); if (pv) pv.onclick = () => showStep(ti - 1);
+}
+back.addEventListener('click', endTour);
+document.addEventListener('keydown', e => { if (e.key === 'Escape') endTour(); });
+$('#helpBtn').addEventListener('click', () => showStep(0));
+(async () => {
+  const wantTour = new URLSearchParams(location.search).get('tour') === '1';
+  let done = false; try { done = localStorage.getItem('recourse.tour') === 'done'; } catch (e) {}
+  if (wantTour || !done) {
+    // make sure there is a card to point at
+    try { const plans = await api('GET', '/plans?full=1'); if (!plans.length) { await api('POST', '/ingest-fixture/D-03.txt'); await refresh(); } } catch (e) {}
+    setTimeout(() => showStep(0), 600);
+  }
 })();
 </script>
 </body>

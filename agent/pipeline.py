@@ -46,7 +46,20 @@ def gather_context(denial: Denial, tb: Toolbox, tracer: Tracer) -> Context:
                        note=note, policy=policy, today=config.today())
 
 
+def find_open_plan(denial_id: str) -> Optional[Plan]:
+    """A plan that is pending or already done for this denial. Building a second one would let a
+    human approve the same action twice, so ingest returns the existing plan instead."""
+    for p in PLANS.values():
+        if p.denial.denial_id == denial_id and p.status in ("awaiting_approval", "approved", "executed"):
+            return p
+    return None
+
+
 def handle_denial(denial: Denial, tb: Toolbox, llm: LLM, tracer: Tracer, auto_approve: bool = False) -> Plan:
+    existing = find_open_plan(denial.denial_id)
+    if existing:
+        tracer.log("plan.duplicate", denial_id=denial.denial_id, existing_plan=existing.plan_id, status=existing.status)
+        return existing
     ctx = gather_context(denial, tb, tracer)
     decision = triage(ctx, llm, tracer)
     plan = build_plan(ctx, decision)
@@ -82,6 +95,13 @@ def approve(plan_id: str, tb: Toolbox, tracer: Tracer) -> Plan:
     plan = PLANS[plan_id]
     if plan.status != "awaiting_approval":
         raise ValueError(f"plan {plan_id} is {plan.status}")
+    # Re-check the ledger at approval time: the world may have moved since the plan was built
+    # (another plan for the same denial executed, or a human worked it by hand).
+    row = tb.ledger.get(plan.denial.claim_id)
+    if row and row.has_denial(plan.denial.denial_id):
+        plan.status = "noop"
+        tracer.log("plan.stale", plan_id=plan_id, reason="denial already recorded on ledger at approval time")
+        return plan
     plan.status = "approved"
     tracer.log("plan.approved", plan_id=plan_id)
     return execute(plan, tb, tracer)

@@ -12,6 +12,7 @@ from email.mime.text import MIMEText
 from pathlib import Path
 from typing import Any, Optional
 
+import os
 import threading
 
 import httplib2
@@ -49,6 +50,9 @@ def get_creds():
     from google_auth_oauthlib.flow import InstalledAppFlow
 
     tok = Path(config.GOOGLE_TOKEN)
+    if not tok.exists() and os.getenv("GOOGLE_TOKEN_JSON"):
+        # Hosted mode: the token (with its refresh token) arrives as an env var, never as a file in the repo.
+        tok.write_text(os.environ["GOOGLE_TOKEN_JSON"], encoding="utf-8")
     creds = Credentials.from_authorized_user_file(str(tok), SCOPES) if tok.exists() else None
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
@@ -145,20 +149,28 @@ class Drive:
         self._cache: dict[str, Optional[dict]] = {}
 
     def _find(self, path: str) -> Optional[dict]:
+        """Resolve <root>/a/b/c.txt. Tolerates duplicate folder names (e.g. seed ran twice) by trying every
+        candidate at each level, and only caches hits — a miss is re-queried next time."""
         if path in self._cache:
             return self._cache[path]
-        parent = self.root
-        node = None
-        for part in path.split("/"):
-            q = f"name = '{part}' and '{parent}' in parents and trashed = false"
-            res = self.svc.files().list(q=q, fields="files(id,name,mimeType)", pageSize=1).execute(http=_http(self.creds)).get("files", [])
-            if not res:
-                self._cache[path] = None
-                return None
-            node = res[0]
-            parent = node["id"]
-        self._cache[path] = node
+        parts = path.split("/")
+        node = self._walk(self.root, parts)
+        if node:
+            self._cache[path] = node
         return node
+
+    def _walk(self, parent: str, parts: list[str]) -> Optional[dict]:
+        name, rest = parts[0], parts[1:]
+        q = f"name = '{name}' and '{parent}' in parents and trashed = false"
+        res = self.svc.files().list(q=q, fields="files(id,name,mimeType)", pageSize=10).execute(http=_http(self.creds)).get("files", [])
+        if not rest:
+            files = [f for f in res if f["mimeType"] != "application/vnd.google-apps.folder"]
+            return files[0] if files else None
+        for folder in (f for f in res if f["mimeType"] == "application/vnd.google-apps.folder"):
+            found = self._walk(folder["id"], rest)
+            if found:
+                return found
+        return None
 
     def exists(self, path: str) -> bool:
         return self._find(path) is not None
@@ -189,7 +201,7 @@ class Drive:
     def read_text(self, path: str) -> str:
         f = self._find(path)
         if not f:
-            raise FileNotFoundError(path)
+            raise FileNotFoundError(f"{path} not found under Drive folder {self.root} (check DRIVE_FOLDER_ID and that seed_google --drive uploaded it)")
         if f["mimeType"] == "application/vnd.google-apps.document":
             req = self.svc.files().export_media(fileId=f["id"], mimeType="text/plain")
         else:

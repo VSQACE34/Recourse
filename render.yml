@@ -1,0 +1,36 @@
+# Render blueprint. Dashboard -> New -> Blueprint -> point at this repo.
+# Set the secret env vars in the Render dashboard (they are marked sync: false here).
+services:
+  - type: web
+    name: recourse
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12"
+      - key: AGENT_TODAY
+        value: "2026-09-13"
+      - key: TOOLS
+        value: google            # or: mock  (sandbox, no credentials at all)
+      - key: LLM_PROVIDER
+        value: groq
+      - key: GROQ_MODEL
+        value: openai/gpt-oss-120b
+      - key: GROQ_API_KEY
+        sync: false
+      - key: GOOGLE_TOKEN_JSON   # paste the whole contents of token.json (one line is fine)
+        sync: false
+      - key: DRIVE_FOLDER_ID
+        sync: false
+      - key: SHEET_ID
+        sync: false
+      - key: PRACTICE_EMAIL
+        sync: false
+      - key: SLACK_BOT_TOKEN
+        sync: false
+      - key: SLACK_APP_TOKEN
+        sync: false
+      - key: APPROVAL_POLL_SECONDS
+        value: "15"

@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Recourse — every denied claim gets its recourse</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --violet: #5B3DF5; --violet-deep: #3B22B8; --pink: #E23A8C; --teal: #0E8A7B; --amber: #D98A0B;
+    --ink: #17171D; --muted: #5F6170; --canvas: #F5F5F7; --card: #FFFFFF; --rule: #E6E6EC;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; background: var(--canvas); color: var(--ink); font: 16px/1.55 Inter, system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+  a { color: inherit; text-decoration: none; }
+  nav { display: flex; align-items: center; gap: 28px; padding: 18px 40px; background: #fff; border-bottom: 1px solid var(--rule); position: sticky; top: 0; z-index: 5; }
+  .logo { display: inline-flex; align-items: center; gap: 10px; font-weight: 800; font-size: 20px; letter-spacing: -0.02em; }
+  .logo i { width: 34px; height: 34px; border-radius: 10px; background: var(--violet); display: inline-grid; place-items: center; color: #fff; font-style: normal; font-weight: 800; }
+  nav .links { display: flex; gap: 22px; color: var(--muted); font-weight: 500; font-size: 15px; }
+  nav .spacer { flex: 1; }
+  .btn { display: inline-flex; align-items: center; gap: 8px; padding: 11px 20px; border-radius: 999px; font-weight: 600; font-size: 15px; border: 1.5px solid transparent; cursor: pointer; transition: transform .12s ease, box-shadow .12s ease; }
+  .btn:hover { transform: translateY(-1px); }
+  .btn.primary { background: var(--violet); color: #fff; box-shadow: 0 8px 24px rgba(91,61,245,.25); }
+  .btn.ghost { border-color: var(--violet); color: var(--violet); background: #fff; }
+  .btn.pink { background: var(--pink); color: #fff; }
+  .hero { display: grid; grid-template-columns: 1.05fr 1fr; gap: 48px; align-items: center; padding: 88px 40px 72px; max-width: 1180px; margin: 0 auto; }
+  h1 { font-size: 52px; line-height: 1.08; letter-spacing: -0.03em; font-weight: 800; margin: 0 0 22px; }
+  h1 em { font-style: normal; color: var(--violet); }
+  .lede { font-size: 19px; color: var(--muted); max-width: 52ch; margin: 0 0 32px; }
+  .hero .cta { display: flex; gap: 12px; flex-wrap: wrap; }
+  .shot { background: linear-gradient(135deg, #EDE8FF 0%, #F9E6F2 100%); border-radius: 24px; padding: 22px; box-shadow: 0 24px 60px rgba(91,61,245,.12); }
+  .shot .card { background: #fff; border-radius: 16px; padding: 18px 20px; border: 1px solid var(--rule); }
+  .shot .card + .card { margin-top: 12px; }
+  .stamp { display: inline-block; padding: 4px 10px; border-radius: 8px; font-weight: 700; font-size: 13px; letter-spacing: .01em; }
+  .stamp.appeal { background: #EEE9FF; color: var(--violet-deep); }
+  .stamp.escalate { background: #FFF3DD; color: #9C5A00; }
+  .stamp.writeoff { background: #FFE6F1; color: #A8145C; }
+  .shot .who { font-weight: 700; margin-top: 8px; }
+  .shot .meta { color: var(--muted); font-size: 13px; }
+  .shot .reason { font-size: 14px; margin-top: 8px; }
+  .band { background: linear-gradient(180deg, #F3EFFF 0%, #EAE3FF 45%, #F8E9F3 100%); padding: 96px 40px; text-align: center; }
+  .band h2 { font-size: 40px; letter-spacing: -0.03em; line-height: 1.12; margin: 0 auto 18px; max-width: 22ch; font-weight: 800; }
+  .band h2 em { font-style: normal; color: var(--violet); }
+  .band p { max-width: 62ch; margin: 0 auto; color: var(--muted); font-size: 18px; }
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; max-width: 1000px; margin: 44px auto 0; }
+  .stat { background: rgba(255,255,255,.75); border: 1px solid rgba(255,255,255,.9); border-radius: 18px; padding: 22px 18px; }
+  .stat b { display: block; font-size: 34px; letter-spacing: -0.03em; color: var(--violet-deep); }
+  .stat span { color: var(--muted); font-size: 14px; }
+  section.feature { display: grid; grid-template-columns: 1fr 1fr; gap: 56px; align-items: center; max-width: 1180px; margin: 0 auto; padding: 88px 40px; }
+  section.feature.flip > :first-child { order: 2; }
+  .icon { width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; color: #fff; font-weight: 800; margin-bottom: 18px; }
+  .icon.v { background: var(--violet); } .icon.p { background: var(--pink); } .icon.t { background: var(--teal); } .icon.a { background: var(--amber); }
+  h2.f { font-size: 34px; letter-spacing: -0.03em; margin: 0 0 10px; font-weight: 800; }
+  .sub { font-size: 18px; margin: 0 0 20px; }
+  ul.checks { list-style: none; padding: 0; margin: 0 0 26px; }
+  ul.checks li { position: relative; padding-left: 30px; margin: 10px 0; color: var(--muted); }
+  ul.checks li::before { content: "✓"; position: absolute; left: 0; top: 0; color: var(--pink); font-weight: 800; }
+  .panel { background: #fff; border: 1px solid var(--rule); border-radius: 20px; padding: 26px 28px; box-shadow: 0 16px 40px rgba(23,23,29,.06); }
+  .panel h4 { margin: 0 0 12px; font-size: 14px; color: var(--muted); font-weight: 600; text-transform: none; letter-spacing: 0; }
+  .story { max-width: 720px; margin: 0 auto; padding: 88px 40px; }
+  .story h2 { font-size: 34px; letter-spacing: -0.03em; font-weight: 800; margin: 0 0 22px; }
+  .story p { font-size: 17px; color: #2B2B33; margin: 0 0 18px; }
+  .story p.sig { color: var(--muted); font-size: 15px; }
+  .steps { max-width: 1180px; margin: 0 auto; padding: 40px 40px 100px; }
+  .steps h2 { font-size: 34px; letter-spacing: -0.03em; font-weight: 800; margin: 0 0 8px; text-align: center; }
+  .steps > p { text-align: center; color: var(--muted); margin: 0 0 36px; }
+  .grid5 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; }
+  .step { background: #fff; border: 1px solid var(--rule); border-radius: 18px; padding: 22px 20px; }
+  .step b { display: inline-grid; place-items: center; width: 30px; height: 30px; border-radius: 999px; background: var(--violet); color: #fff; margin-bottom: 12px; font-size: 14px; }
+  .step h5 { margin: 0 0 6px; font-size: 16px; }
+  .step p { margin: 0; color: var(--muted); font-size: 14px; }
+  .trace { font: 13px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; background: #17171D; color: #E9E6FF; border-radius: 14px; padding: 16px 18px; white-space: pre; overflow: auto; }
+  .trace .k { color: #B9A8FF; } .trace .ok { color: #7EE0C2; } .trace .warn { color: #FFC66D; }
+  footer { text-align: center; color: var(--muted); font-size: 14px; padding: 36px; border-top: 1px solid var(--rule); background: #fff; }
+  @media (max-width: 880px) {
+    nav { padding: 14px 20px; } nav .links { display: none; }
+    .hero, section.feature { grid-template-columns: 1fr; padding: 56px 20px; }
+    section.feature.flip > :first-child { order: 0; }
+    h1 { font-size: 38px; } .stats { grid-template-columns: 1fr 1fr; } .grid5 { grid-template-columns: 1fr; } .band, .story, .steps { padding-left: 20px; padding-right: 20px; }
+  }
+</style>
+</head>
+<body>
+<nav>
+  <a class="logo" href="/"><i>R</i>Recourse</a>
+  <div class="links"><a href="#how">How it works</a><a href="#story">Why I built this</a><a href="#trust">Reliability</a></div>
+  <span class="spacer"></span>
+  <a class="btn ghost" href="/eval">Eval results</a>
+  <a class="btn primary" href="/app">Open the worklist →</a>
+</nav>
+
+<header class="hero">
+  <div>
+    <h1>Every denied claim<br>gets its <em>recourse.</em></h1>
+    <p class="lede">Recourse is an AI agent that works medical claim denials end to end: it reads the denial, the clinical note and the payer's policy, decides whether to correct and resubmit, appeal, write off or escalate, then does the paperwork across Gmail, Drive, Sheets, Calendar and Slack. A human approves anything irreversible.</p>
+    <div class="cta">
+      <a class="btn primary" href="/app?tour=1">Try the worklist</a>
+      <a class="btn ghost" href="#how">See how it decides</a>
+    </div>
+  </div>
+  <div class="shot" aria-hidden="true">
+    <div class="card">
+      <span class="stamp appeal">appeal</span>
+      <div class="who">C-1003 — Fernandes, Lucia</div>
+      <div class="meta">Meridian Health Plan · CO-50/N115 · $1,450.00 denied · deadline 2027-02-16</div>
+      <div class="reason">Documentation meets policy criteria: symptoms ≥ 6 weeks, failed conservative therapy, positive SLR. Appeal letter drafted, quoting the note.</div>
+    </div>
+    <div class="card">
+      <span class="stamp escalate">escalate physician</span>
+      <div class="who">C-1004 — Nguyen, Thanh</div>
+      <div class="meta">Meridian Health Plan · CO-50/N115 · $1,450.00 denied</div>
+      <div class="reason">Note documents 10 days of pain and no conservative therapy. Criteria not met; routed to the physician rather than auto-written-off.</div>
+    </div>
+    <div class="card">
+      <span class="stamp writeoff">write off</span>
+      <div class="who">C-1011 — Costa, Elena</div>
+      <div class="meta">Northstar Advantage · CO-50 · $95.00 · 60-day window closed 2026-09-10</div>
+      <div class="reason">Appeal window closed three days ago. Write-off proposed, gated behind approval.</div>
+    </div>
+  </div>
+</header>
+
+<section class="band">
+  <h2>Denials are the most persistent revenue leak in a clinic, and <em>most are never worked.</em></h2>
+  <p>Working a denial means reading the reason code, finding the note, checking the payer's policy, drafting a letter, tracking a deadline and updating a ledger. It takes a person 20 minutes per claim, so the long tail simply gets written off.</p>
+  <div class="stats">
+    <div class="stat"><b>11.8%</b><span>of claims denied on first submission (2024)</span></div>
+    <div class="stat"><b>65%</b><span>of denied claims never appealed or resubmitted</span></div>
+    <div class="stat"><b>~70%</b><span>of appealed denials are overturned</span></div>
+    <div class="stat"><b>$25–118</b><span>staff cost to rework one denial</span></div>
+  </div>
+</section>
+
+<section class="feature" id="how">
+  <div>
+    <div class="icon v">R</div>
+    <h2 class="f">Rules decide the category. The model only reads.</h2>
+    <p class="sub">A deterministic cascade handles everything that is arithmetic: duplicates, timely-filing maths, appeal windows, dollar thresholds, member-ID mismatches. The language model is called for exactly two reading tasks, and every rule that fires is shown on the card.</p>
+    <ul class="checks">
+      <li>Does this clinical note meet this payer's policy criteria? Quotes required, confidence gated.</li>
+      <li>What is the one concrete fix for a rejected claim? "Can't tell" is an allowed answer.</li>
+      <li>Anything below the confidence bar goes to a physician, never to an automatic write-off.</li>
+    </ul>
+    <a class="btn ghost" href="/app?tour=1">Watch it decide</a>
+  </div>
+  <div class="panel">
+    <h4>Rule trace · C-1004</h4>
+    <div class="trace"><span class="k">R1</span>  claim C-1004 found on ledger
+<span class="k">R2</span>  denial MER-ICN-2026-0820-7791 not yet worked
+<span class="k">R8</span>  CARC 50: assessing note against policy §7.3
+<span class="k">R8f</span> <span class="warn">not supported</span> (conf 0.95)
+     unmet: symptoms ≥ 6 weeks · conservative therapy ≥ 6 weeks · neuro deficit
+     evidence: "CC: Low back pain, 10 days."
+<span class="ok">→ escalate_physician</span>  no email · no write-off · deadline booked</div>
+  </div>
+</section>
+
+<section class="feature flip">
+  <div>
+    <div class="icon p">✓</div>
+    <h2 class="f">Acts across five apps. A human signs anything irreversible.</h2>
+    <p class="sub">Recourse reads from Gmail, Drive and Sheets, and writes to all five. The plan goes to Slack first; the email leaves only after someone clicks approve.</p>
+    <ul class="checks">
+      <li><b>Drive</b> — the letter is saved to <code>appeals/</code> before it is sent, so there is always a record.</li>
+      <li><b>Gmail</b> — appeal or resubmission goes to the payer, from the practice's own inbox.</li>
+      <li><b>Calendar</b> — appeal deadline booked with a reminder; urgent if under 14 days.</li>
+      <li><b>Sheets</b> — the claim ledger flips status, written last so a failure can't lie.</li>
+      <li><b>Slack</b> — approve/reject buttons, escalations to the physician, a daily summary.</li>
+    </ul>
+  </div>
+  <div class="panel">
+    <h4>What the billing team sees in Slack</h4>
+    <div class="trace">Approval needed
+C-1003 · FERNANDES, LUCIA · CO-50 · $1,450.00 → <span class="k">appeal</span>
+Documentation meets policy criteria: symptoms ≥ 6 weeks,
+failed conservative therapy, positive SLR.
+Rules: R8f supported (conf 0.92)
+
+[ Approve & execute ]  [ Reject ]
+
+<span class="ok">✅ Approved by @george — plan 9cac4474 executed</span></div>
+  </div>
+</section>
+
+<section class="feature" id="trust">
+  <div>
+    <div class="icon t">20</div>
+    <h2 class="f">Evaluated before it touched a real inbox.</h2>
+    <p class="sub">Twenty seeded scenarios run against stateful replicas of the five apps, with fault injection, on a deterministic mock model and on the real one.</p>
+    <ul class="checks">
+      <li>Judgement: appeal when criteria are met, refuse when they aren't, recognise an emergency exception.</li>
+      <li>Arithmetic: expired windows, late filing, duplicates, below-threshold dollars.</li>
+      <li>Safety: unknown claim, missing note, garbage mail, Gmail outage, rejected plan, double ingest.</li>
+      <li>One finding changed the design: the model got a member-ID fix wrong once in three runs, so that decision became a rule.</li>
+    </ul>
+    <a class="btn ghost" href="/eval">Read the results table</a>
+  </div>
+  <div class="panel">
+    <h4>eval/results.md</h4>
+    <div class="trace">S03  MRI necessity, criteria met       → appeal       <span class="ok">✓</span>
+S04  MRI necessity, criteria NOT met   → physician    <span class="ok">✓</span>
+S10  claim not on ledger               → touch nothing <span class="ok">✓</span>
+S12  same denial twice                 → no re-send   <span class="ok">✓</span>
+S14  Gmail fails twice                 → ledger intact <span class="ok">✓</span>
+S17  window closed 3 days ago          → write off    <span class="ok">✓</span>
+S20  no prior auth, emergency          → appeal       <span class="ok">✓</span>
+                                  20/20 mock · 20/20 groq</div>
+  </div>
+</section>
+
+<section class="story" id="story">
+  <h2>Why I built this</h2>
+  <p>I build software for healthcare and clinical trials, and a while ago I worked on a medical coding assistant: a tool that reads a clinical note and suggests the ICD and CPT codes. It was good at the coding. What I didn't expect was where the work actually went afterwards. The claims left the practice, and a meaningful share of them came back denied, and then nothing happened. Not because the denials were right, but because working one takes a person twenty minutes of reading, looking things up, drafting and tracking, and there were always more urgent things than a $185 claim from July.</p>
+  <p>That is the part I couldn't leave alone. Roughly two-thirds of denied claims are never appealed or resubmitted, and about seventy percent of the ones that are appealed get paid. The money is there. The bottleneck is a triage task that is mostly rules with a small amount of reading in the middle. That shape is exactly what a well-built agent is good at: let rules decide the category and the arithmetic, let the model read a note against a policy, and let a human approve the parts that can't be undone.</p>
+  <p>Recourse is the version of that idea I could build in a day, on the tools a small practice already has. It is deliberately conservative. It would rather escalate than guess, and it was tested against twenty ways of going wrong before it sent a single real email.</p>
+  <p class="sig">— George A. Johny · Multi-App AI Agent Hackathon, September 2026</p>
+</section>
+
+<section class="steps">
+  <h2>What happens when you open the worklist</h2>
+  <p>A five-step tour runs the first time. Here it is in one glance.</p>
+  <div class="grid5">
+    <div class="step"><b>1</b><h5>A denial arrives</h5><p>Poll the inbox, or ingest one of the seventeen fixture denials to see the agent work on demand.</p></div>
+    <div class="step"><b>2</b><h5>Context is gathered</h5><p>Claim, ledger row, patient record, clinical note and payer policy are pulled from Drive and Sheets.</p></div>
+    <div class="step"><b>3</b><h5>Rules, then reading</h5><p>The rule cascade decides the category. The model reads the note only when a judgement call is needed.</p></div>
+    <div class="step"><b>4</b><h5>A plan, not an action</h5><p>The card shows the decision, the rules that fired and the drafted letter. Nothing has been sent yet.</p></div>
+    <div class="step"><b>5</b><h5>You approve</h5><p>Approve here or in Slack. Then the letter is saved, sent, the deadline booked and the ledger updated.</p></div>
+  </div>
+</section>
+
+<footer>Recourse · built by George · rules first, judgement second, humans sign.</footer>
+</body>
+</html>
