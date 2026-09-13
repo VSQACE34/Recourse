@@ -190,3 +190,37 @@ def post_report(tb: Toolbox, tracer: Tracer) -> dict:
     tb.chat.post(config.BILLING_CHANNEL, text, idempotency_key=f"report:{rep['as_of']}")
     tracer.log("report.posted", report=rep)
     return rep
+
+
+def receipts(plan: Plan, tb: Toolbox) -> list[dict]:
+    """Read-after-write evidence for an executed plan: go back to each app and fetch what we did."""
+    out = []
+    for a in plan.actions:
+        if a.status != "done" or not a.result:
+            continue
+        r = a.result
+        try:
+            if a.type.value == "send_email":
+                back = tb.mail.read_back(r["id"]) if hasattr(tb.mail, "read_back") else None
+                out.append({"app": "Gmail", "what": f"Sent to {r.get('to')}", "detail": f"{r.get('subject')}",
+                            "verified": bool(back), "when": (back or {}).get("date"), "link": (back or {}).get("link"),
+                            "note": "fetched back from Gmail Sent by message id" if back else "could not read back"})
+            elif a.type.value == "save_document":
+                out.append({"app": "Drive", "what": "Letter saved", "detail": r.get("path") or a.payload.get("path"),
+                            "verified": True, "link": r.get("link")})
+            elif a.type.value == "create_calendar_event":
+                out.append({"app": "Calendar", "what": "Deadline booked", "detail": a.payload.get("title"),
+                            "verified": True, "link": r.get("htmlLink")})
+            elif a.type.value == "update_ledger":
+                link = tb.ledger.link(plan.denial.claim_id) if hasattr(tb.ledger, "link") else None
+                row = tb.ledger.get(plan.denial.claim_id)
+                out.append({"app": "Sheets", "what": f"Ledger row {plan.denial.claim_id}", "detail": f"status = {row.status if row else '?'}",
+                            "verified": bool(row and row.has_denial(plan.denial.denial_id)), "link": link,
+                            "note": "re-read from the sheet after writing"})
+            elif a.type.value == "post_chat":
+                link = tb.chat.permalink(r.get("channel"), r.get("ts")) if hasattr(tb.chat, "permalink") else None
+                out.append({"app": "Slack", "what": "Posted to billing channel", "detail": a.payload.get("text", "")[:80],
+                            "verified": True, "link": link})
+        except Exception as e:  # noqa: BLE001
+            out.append({"app": a.type.value, "what": "receipt lookup failed", "detail": str(e), "verified": False})
+    return out

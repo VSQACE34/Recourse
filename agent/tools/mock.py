@@ -48,6 +48,12 @@ class MockMail:
     def mark_processed(self, msg_id: str) -> None:
         self.processed.add(msg_id)
 
+    def read_back(self, msg_id):
+        for r in self.sent:
+            if r["id"] == msg_id:
+                return {**r, "date": "(mock)", "labels": ["SENT"], "snippet": r.get("body", "")[:90], "link": None}
+        return None
+
     def send(self, to, subject, body, idempotency_key):
         self.faults.check("mail.send")
         if idempotency_key in self._sent_keys:          # replica enforces idempotency like a real API with a key would
@@ -95,6 +101,9 @@ class MockLedger:
     def get(self, claim_id: str) -> Optional[LedgerRow]:
         self.faults.check("ledger.get")
         return copy.deepcopy(self.rows.get(claim_id))
+
+    def link(self, claim_id):
+        return None
 
     def update(self, row: LedgerRow) -> None:
         self.faults.check("ledger.update")
@@ -151,6 +160,13 @@ class MockChat:
         for m in self.messages:
             if m["ts"] == ts:
                 m["reactions"].add(name)
+
+    def permalink(self, channel, ts):
+        return None
+
+    def history(self, channel, limit=15):
+        return [{"ts": x["ts"], "user": "recourse", "bot": True, "text": x["text"], "reactions": sorted(x.get("reactions", set()))}
+                for x in self.messages[-limit:]]
 
     def reactions(self, channel, ts) -> set[str]:
         for m in self.messages:

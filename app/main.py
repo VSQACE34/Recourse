@@ -20,6 +20,9 @@ Endpoints
   GET  /fixtures          names of denial fixtures on disk
   POST /ingest-fixture/{name}   ingest fixtures/denials/<name> (works in mock and google mode)
   GET  /traces/{run_id}   JSONL trace for a run
+  GET  /plans/{id}/receipts read-after-write evidence for an executed plan (Gmail, Drive, Calendar, Sheets, Slack)
+  GET  /embeds            view-only embed URLs for the evidence panel
+  GET  /slack/feed        recent messages from the billing channel (Slack can't be iframed)
   GET  /report            counts and dollars by decision, from the ledger
   POST /report/slack      post that summary to the billing channel
   GET  /mock/state        (mock only) what's in the fake mailbox / calendar / ledger / chat
@@ -126,6 +129,37 @@ def trace(run_id: str):
     if not p.exists():
         raise HTTPException(404)
     return p.read_text(encoding="utf-8")
+
+
+@app.get("/plans/{plan_id}/receipts")
+def plan_receipts(plan_id: str):
+    p = pipeline.PLANS.get(plan_id)
+    if not p:
+        raise HTTPException(404)
+    return pipeline.receipts(p, TB)
+
+
+@app.get("/slack/feed")
+def slack_feed(limit: int = 15):
+    try:
+        return {"channel": config.BILLING_CHANNEL, "messages": TB.chat.history(config.BILLING_CHANNEL, limit)}
+    except Exception as e:  # noqa: BLE001
+        return {"channel": config.BILLING_CHANNEL, "messages": [], "error": str(e)}
+
+
+@app.get("/embeds")
+def embeds():
+    """Public, view-only embeds for the evidence panel. Empty strings when not configured (mock mode)."""
+    if TOOLS_KIND != "google":
+        return {"mode": "mock", "sheet": "", "calendar": "", "drive": "", "slack_invite": "", "email": ""}
+    return {
+        "mode": "google",
+        "sheet": f"https://docs.google.com/spreadsheets/d/{config.SHEET_ID}/preview?rm=minimal" if config.SHEET_ID else "",
+        "calendar": f"https://calendar.google.com/calendar/embed?src={config.CALENDAR_EMBED_ID}&ctz={config.EVIDENCE_TZ}&mode=AGENDA" if config.CALENDAR_EMBED_ID else "",
+        "drive": f"https://drive.google.com/embeddedfolderview?id={config.DRIVE_FOLDER_ID}#list" if config.DRIVE_FOLDER_ID else "",
+        "slack_invite": config.SLACK_INVITE_URL,
+        "email": config.PRACTICE_EMAIL,
+    }
 
 
 @app.get("/report")

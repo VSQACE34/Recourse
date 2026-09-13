@@ -8,8 +8,9 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root {
-    --violet: #5B3DF5; --violet-deep: #3B22B8; --pink: #E23A8C; --teal: #0E8A7B; --amber: #D98A0B; --grey: #7A7C88; --ok: #1E9E6A;
+    --violet: #5B3DF5; --violet-deep: #3B22B8; --pink: #E23A8C; --teal: #0E8A7B; --amber: #D98A0B;
     --ink: #17171D; --muted: #5F6170; --canvas: #F5F5F7; --card: #FFFFFF; --rule: #E6E6EC;
+    --grey: #7A7C88; --ok: #1E9E6A;
   }
   * { box-sizing: border-box; }
   body { margin: 0; background: var(--canvas); color: var(--ink); font: 15px/1.5 Inter, system-ui, sans-serif; font-variant-numeric: tabular-nums; -webkit-font-smoothing: antialiased; }
@@ -62,6 +63,31 @@
   .steps { list-style: none; padding: 0; margin: 4px 0 0; font-size: 12.5px; color: var(--muted); }
   .steps li::before { content: "·"; margin-right: 6px; }
   .steps li.done::before { content: "✓"; color: var(--ok); } .steps li.failed::before { content: "✕"; color: var(--pink); } .steps li.skipped::before { content: "–"; }
+  /* evidence panel */
+  .evidence { max-width: 1240px; margin: 18px auto 0; padding: 0 32px; }
+  .evidence details { margin: 0; background: var(--card); border: 1px solid var(--rule); border-radius: 18px; padding: 14px 18px; }
+  .evidence summary { font-size: 15px; font-weight: 700; color: var(--ink); }
+  .evidence summary small { color: var(--muted); font-weight: 500; margin-left: 8px; }
+  .evidence .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; margin-top: 14px; }
+  .feed { height: 300px; overflow: auto; background: #fff; padding: 8px 12px; font-size: 13px; }
+  .feed .msg { padding: 7px 0; border-bottom: 1px solid var(--rule); white-space: pre-wrap; }
+  .feed .msg:last-child { border-bottom: 0; }
+  .feed .u { font-weight: 700; margin-right: 6px; } .feed .t { color: var(--muted); font-size: 12px; } .feed .rx { color: var(--muted); font-size: 12px; margin-left: 6px; }
+  .feed .err { color: var(--pink); }
+  .evidence .frame { border: 1px solid var(--rule); border-radius: 12px; overflow: hidden; background: var(--canvas); }
+  .evidence .frame header { display: flex; align-items: center; gap: 8px; padding: 8px 12px; font-size: 13px; font-weight: 600; border-bottom: 1px solid var(--rule); }
+  .evidence .frame header a { margin-left: auto; color: var(--violet); font-weight: 600; font-size: 12px; }
+  .evidence iframe { width: 100%; height: 300px; border: 0; display: block; background: #fff; }
+  .evidence .links { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 12px; font-size: 13px; color: var(--muted); }
+  .evidence .links a { color: var(--violet); font-weight: 600; }
+  .receipts { list-style: none; padding: 0; margin: 8px 0 0; font-size: 13px; }
+  .receipts li { display: grid; grid-template-columns: 78px 1fr auto; gap: 10px; padding: 6px 0; border-top: 1px solid var(--rule); align-items: baseline; }
+  .receipts li:first-child { border-top: 0; }
+  .receipts .app { font-weight: 700; }
+  .receipts .ok { color: var(--ok); font-weight: 700; } .receipts .no { color: var(--pink); font-weight: 700; }
+  .receipts .d { color: var(--muted); }
+  .receipts a { color: var(--violet); font-weight: 600; }
+  @media (max-width: 860px) { .evidence .grid { grid-template-columns: 1fr; } .evidence { padding: 0 16px; } }
   /* tour */
   .tour-back { position: fixed; inset: 0; background: rgba(23,23,29,.45); z-index: 20; display: none; }
   .tour { position: fixed; z-index: 21; width: 380px; max-width: calc(100vw - 32px); background: #fff; border-radius: 18px; padding: 20px 22px; box-shadow: 0 30px 70px rgba(23,23,29,.28); display: none; }
@@ -104,6 +130,18 @@
   <button class="chip" data-f="write_off">Write-offs</button>
   <button class="chip" data-f="failed">Failed / rejected</button>
 </div>
+<div class="evidence" id="evidence" hidden>
+  <details open>
+    <summary>Evidence <small>live, view-only windows into the accounts the agent is acting on</small></summary>
+    <div class="grid">
+      <div class="frame"><header>Ledger (Google Sheets) <a id="sheetLink" target="_blank" rel="noopener">open ↗</a></header><iframe id="sheetFrame" title="Ledger sheet" loading="lazy"></iframe></div>
+      <div class="frame"><header>Appeal deadlines (Google Calendar) <a id="calLink" target="_blank" rel="noopener">open ↗</a></header><iframe id="calFrame" title="Calendar" loading="lazy"></iframe></div>
+      <div class="frame"><header>Letters (Google Drive) <a id="driveLink" target="_blank" rel="noopener">open ↗</a></header><iframe id="driveFrame" title="Drive folder" loading="lazy"></iframe></div>
+      <div class="frame"><header>Slack <span id="feedChan" style="font-weight:500;color:var(--muted)"></span> <a id="slackLink" target="_blank" rel="noopener" hidden>join ↗</a></header><div class="feed" id="feed"><span class="t">loading…</span></div></div>
+    </div>
+    <div class="links" id="evLinks"></div>
+  </details>
+</div>
 <main id="list"><div class="empty"><b>No denials worked yet.</b> Poll the inbox, or pick a fixture and ingest it to watch the agent decide.</div></main>
 <script>
 const $ = s => document.querySelector(s);
@@ -129,12 +167,15 @@ async function api(method, path, body) {
 function say(t) { $('#status').textContent = t + ' · ' + new Date().toLocaleTimeString(); }
 async function call(method, path, label) { try { await api(method, path); say(label); await refresh(); } catch (e) { say(e.message); } }
 async function ingestFixture() { const f = $('#fixture').value; await call('POST', `/ingest-fixture/${f}`, `Ingested ${f}`); }
-async function decide(id, what) { await call('POST', `/plans/${id}/${what}`, `${what === 'approve' ? 'Approved' : 'Rejected'} ${id}`); }
+async function decide(id, what) { await call('POST', `/plans/${id}/${what}`, `${what === 'approve' ? 'Approved' : 'Rejected'} ${id}`); delete receiptCache[id]; setTimeout(reloadEmbeds, 1500); }
 function esc(s) { return (s ?? '').toString().replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 function money(v) { return v == null ? '' : '$' + Number(v).toLocaleString(undefined, {minimumFractionDigits: 2}); }
+let lastSig = '';
 function render(plans) {
   const list = $('#list');
   latest = plans;
+  const sig = filter + '|' + plans.map(p => p.plan_id + p.status + (p.actions || []).map(a => a.status).join('')).join(',');
+  if (sig === lastSig) return; lastSig = sig;
   if (!plans.length) return;
   plans.sort((a, b) => (b.created_at || 0) - (a.created_at || 0));
   const counts = {await: 0, done: 0, esc: 0, money: 0};
@@ -162,6 +203,7 @@ function render(plans) {
         <div class="reason">${esc(d.reason)}</div>
         ${trace ? `<details><summary>Rules that fired (${d.rule_trace.length})</summary><ol class="trace">${trace}</ol></details>` : ''}
         ${p.draft_text ? `<details><summary>${d.type === 'appeal' ? 'Appeal letter' : d.type === 'correct_resubmit' ? 'Resubmission cover' : 'Message to team'}</summary><pre>${esc(p.draft_text)}</pre></details>` : ''}
+        ${p.status === 'executed' ? `<details ontoggle="if(this.open) loadReceipts('${p.plan_id}')"><summary>Receipts — what each app says it did</summary><div id="rc-${p.plan_id}"></div></details>` : ''}
       </div>
       <div class="actions">
         <span class="state ${p.status}">${p.status.replace(/_/g, ' ')}</span>
@@ -173,16 +215,53 @@ function render(plans) {
   $('#k-await b').textContent = counts.await; $('#k-done b').textContent = counts.done; $('#k-esc b').textContent = counts.esc;
   $('#k-money b').textContent = money(counts.money);
 }
+let EMB = null;
+function slackFmt(t) { return esc(t).replace(/\*(.+?)\*/g, '<b>$1</b>').replace(/_(.+?)_/g, '<i>$1</i>').replace(/`(.+?)`/g, '<code>$1</code>'); }
+async function loadFeed() {
+  try {
+    const f = await api('GET', '/slack/feed');
+    $('#feedChan').textContent = f.channel || '';
+    const box = $('#feed'), atBottom = box.scrollHeight - box.scrollTop - box.clientHeight < 40;
+    if (f.error) { box.innerHTML = `<div class="err">${esc(f.error)}</div>`; return; }
+    box.innerHTML = f.messages.length ? f.messages.map(m => `<div class="msg"><span class="u">${esc(m.user)}</span><span class="t">${m.ts ? new Date(parseFloat(m.ts) * 1000).toLocaleTimeString() : ''}</span>${m.reactions.length ? `<span class="rx">${m.reactions.map(r => ':' + r + ':').join(' ')}</span>` : ''}<div>${slackFmt(m.text)}</div></div>`).join('') : '<span class="t">no messages yet</span>';
+    if (atBottom) box.scrollTop = box.scrollHeight;
+  } catch (e) {}
+}
+async function loadEmbeds() {
+  try {
+    EMB = await api('GET', '/embeds');
+    $('#evidence').hidden = false;                       // the Slack feed works in mock mode too
+    if (EMB.mode !== 'google') { for (const id of ['sheetFrame', 'calFrame', 'driveFrame']) $('#' + id).closest('.frame').hidden = true; return; }
+    if (EMB.sheet) { $('#sheetFrame').src = EMB.sheet; $('#sheetLink').href = EMB.sheet.replace('/preview?rm=minimal', '/edit'); }
+    if (EMB.calendar) { $('#calFrame').src = EMB.calendar; $('#calLink').href = EMB.calendar; }
+    if (EMB.drive) { $('#driveFrame').src = EMB.drive; $('#driveLink').href = EMB.drive.replace('embeddedfolderview?id=', 'drive/folders/').replace('#list', ''); }
+    const L = [];
+    if (EMB.email) L.push(`Gmail: appeals are sent from <b>${esc(EMB.email)}</b>; each card shows the message read back from Sent.`);
+    if (EMB.slack_invite) { L.push(`<a href="${esc(EMB.slack_invite)}" target="_blank" rel="noopener">Join the Slack workspace ↗</a> to click the approval buttons yourself.`); $('#slackLink').href = EMB.slack_invite; $('#slackLink').hidden = false; }
+    $('#evLinks').innerHTML = L.join(' &nbsp;·&nbsp; ');
+  } catch (e) {}
+}
+function reloadEmbeds() { if (!EMB || EMB.mode !== 'google') return; for (const id of ['sheetFrame', 'calFrame', 'driveFrame']) { const f = $('#' + id); if (f.src) f.src = f.src; } }
+const receiptCache = {};
+async function loadReceipts(id) {
+  const box = document.getElementById('rc-' + id); if (!box || receiptCache[id]) return;
+  box.innerHTML = '<span class="d">checking each app…</span>';
+  try {
+    const rs = await api('GET', `/plans/${id}/receipts`); receiptCache[id] = rs;
+    box.innerHTML = rs.length ? `<ul class="receipts">${rs.map(r => `<li><span class="app">${esc(r.app)}</span><span>${esc(r.what)} <span class="d">— ${esc(r.detail || '')}${r.when ? ' · ' + esc(r.when) : ''}${r.note ? ' · ' + esc(r.note) : ''}</span></span><span>${r.verified ? '<span class="ok">verified</span>' : '<span class="no">unverified</span>'}${r.link ? ` · <a href="${esc(r.link)}" target="_blank" rel="noopener">open ↗</a>` : ''}</span></li>`).join('')}</ul>` : '<span class="d">no receipts</span>';
+  } catch (e) { box.innerHTML = '<span class="no">could not fetch receipts</span>'; }
+}
 async function refresh() {
   try {
     const [h, plans] = await Promise.all([api('GET', '/health'), api('GET', '/plans?full=1')]);
     $('#env').textContent = `${h.tools} apps · ${h.llm} model · today ${h.today}`;
     render(plans);
+    loadFeed();
   } catch (e) { $('#env').textContent = 'server unreachable'; }
 }
 (async () => {
   try { const fx = await api('GET', '/fixtures'); $('#fixture').innerHTML = fx.map(f => `<option>${f}</option>`).join(''); } catch (e) {}
-  await refresh(); setInterval(refresh, 3000);
+  await loadEmbeds(); await refresh(); setInterval(refresh, 3000);
 })();
 
 // ---------------- guided tour (first visit, or the ? button)
@@ -205,7 +284,18 @@ function showStep(i) {
     ${ti > 0 ? '<button class="btn" id="tPrev">Back</button>' : ''}
     <button class="btn primary" id="tNext">${ti === TOUR.length - 1 ? 'Done' : 'Next'}</button></div>`;
   back.style.display = box.style.display = 'block';
-  if (spotEl) { spotEl.classList.add('spot'); spotEl.scrollIntoView({ block: 'center', behavior: 'smooth' }); const r = spotEl.getBoundingClientRect(); const top = Math.min(window.innerHeight - 220, r.bottom + 14); box.style.top = top + 'px'; box.style.left = Math.max(16, Math.min(window.innerWidth - 400, r.left)) + 'px'; }
+  if (spotEl) {
+    spotEl.classList.add('spot');
+    spotEl.scrollIntoView({ block: 'center', behavior: 'auto' });   // instant, so the measurement below is final
+    const r = spotEl.getBoundingClientRect(), bw = Math.min(380, window.innerWidth - 32), bh = box.offsetHeight || 210, gap = 16;
+    let top, left;
+    if (r.bottom + gap + bh <= window.innerHeight) top = r.bottom + gap;                 // below the target
+    else if (r.top - gap - bh >= 0) top = r.top - gap - bh;                              // above it
+    else top = Math.max(16, Math.min(window.innerHeight - bh - 16, r.top));              // beside it
+    if (top >= r.bottom || top + bh <= r.top) left = Math.max(16, Math.min(window.innerWidth - bw - 16, r.left));
+    else left = r.left - bw - gap >= 16 ? r.left - bw - gap : Math.min(window.innerWidth - bw - 16, r.right + gap);
+    box.style.top = top + 'px'; box.style.left = left + 'px';
+  }
   else { box.style.top = '110px'; box.style.left = 'calc(50% - 190px)'; }
   $('#tNext').onclick = () => (ti === TOUR.length - 1 ? endTour() : showStep(ti + 1));
   const pv = $('#tPrev'); if (pv) pv.onclick = () => showStep(ti - 1);
@@ -217,6 +307,8 @@ $('#helpBtn').addEventListener('click', () => showStep(0));
   const wantTour = new URLSearchParams(location.search).get('tour') === '1';
   let done = false; try { done = localStorage.getItem('recourse.tour') === 'done'; } catch (e) {}
   if (wantTour || !done) {
+    try { localStorage.setItem('recourse.tour', 'done'); } catch (e) {}          // once per device, even if they close mid-way
+    if (wantTour) history.replaceState(null, '', location.pathname);            // drop ?tour=1 so a reload doesn't repeat it
     // make sure there is a card to point at
     try { const plans = await api('GET', '/plans?full=1'); if (!plans.length) { await api('POST', '/ingest-fixture/D-03.txt'); await refresh(); } } catch (e) {}
     setTimeout(() => showStep(0), 600);

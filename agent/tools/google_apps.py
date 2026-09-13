@@ -123,9 +123,18 @@ class Gmail:
         msg["to"], msg["subject"] = to, subject
         raw = base64.urlsafe_b64encode(msg.as_bytes()).decode()
         sent = self.svc.users().messages().send(userId="me", body={"raw": raw}).execute(http=_http(self.creds))
-        rec = {"id": sent["id"], "to": to, "subject": subject}
+        rec = {"id": sent["id"], "to": to, "subject": subject, "threadId": sent.get("threadId")}
         self.keys.put(idempotency_key, rec)
         return rec
+
+    def read_back(self, msg_id: str) -> dict:
+        """Fetch a message we sent, by id, straight from Gmail — proof it exists in Sent."""
+        m = self.svc.users().messages().get(userId="me", id=msg_id, format="metadata",
+                                            metadataHeaders=["To", "Subject", "Date"]).execute(http=_http(self.creds))
+        h = {x["name"].lower(): x["value"] for x in m.get("payload", {}).get("headers", [])}
+        return {"id": m["id"], "to": h.get("to"), "subject": h.get("subject"), "date": h.get("date"),
+                "labels": m.get("labelIds", []), "snippet": m.get("snippet", ""),
+                "link": f"https://mail.google.com/mail/u/0/#sent/{m['id']}"}
 
 
 def _body(payload: dict) -> str:
@@ -232,6 +241,17 @@ class Sheets:
 
     def get(self, claim_id: str) -> Optional[LedgerRow]:
         return next((r for r in self.all() if r.claim_id == claim_id), None)
+
+    def row_number(self, claim_id: str) -> Optional[int]:
+        rows = self._rows()
+        for i, r in enumerate(rows[1:], start=2):
+            if r and r[0] == claim_id:
+                return i
+        return None
+
+    def link(self, claim_id: str) -> Optional[str]:
+        n = self.row_number(claim_id)
+        return f"https://docs.google.com/spreadsheets/d/{self.sheet_id}/edit#range=A{n}:N{n}" if n else None
 
     def update(self, row: LedgerRow) -> None:
         rows = self._rows()

@@ -35,7 +35,7 @@ URGENT_DAYS = int(os.getenv("URGENT_DAYS", "7"))
 LLM_PROVIDER = os.getenv("LLM_PROVIDER", "mock")          # mock | groq | openai_compat
 GROQ_MODEL = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
 LLM_BASE_URL = os.getenv("LLM_BASE_URL", "")               # openai_compat: e.g. https://openrouter.ai/api/v1
-LLM_API_KEY = os.getenv(os.getenv("GROQ_API_KEY", ""))
+LLM_API_KEY = os.getenv("LLM_API_KEY", os.getenv("OPENROUTER_API_KEY", ""))
 LLM_MODEL = os.getenv("LLM_MODEL", "")
 
 # Practice identity (appears in letters)
@@ -56,4 +56,8 @@ GMAIL_LABEL = os.getenv("GMAIL_LABEL", "denials")
 # Slack
 SLACK_BOT_TOKEN = os.getenv("SLACK_BOT_TOKEN", "")
 SLACK_SIGNING_SECRET = os.getenv("SLACK_SIGNING_SECRET", "")   # only for the HTTP /slack/interactions path
-SLACK_APP_TOKEN = os.getenv("SLACK_APP_TOKEN", "")             # xapp-… enables Socket Mode buttons (no tunnel)
+SLACK_APP_TOKEN = os.getenv("SLACK_APP_TOKEN", "")
+# Evidence panel (hosted demo): share these view-only and the dashboard embeds them
+SLACK_INVITE_URL = os.getenv("SLACK_INVITE_URL", "")
+CALENDAR_EMBED_ID = os.getenv("CALENDAR_EMBED_ID", os.getenv("PRACTICE_EMAIL", ""))   # calendar id = the gmail address
+EVIDENCE_TZ = os.getenv("EVIDENCE_TZ", "Asia/Kolkata")             # xapp-… enables Socket Mode buttons (no tunnel)
