@@ -1,6 +1,6 @@
 # Recourse — every denied claim gets its recourse
 
-**Live demo:** `https://<your-railway-domain>` · **Demo video (2 min):** `<video link>` · **Slack workspace (to click approve yourself):** `<invite link>`
+**Live demo:** `https://web-production-ac091.up.railway.app` · **Demo video (2 min):** `https://drive.google.com/file/d/1T3uX4osRruquVy6-LAfcN0IZ-4IDy0cg/view?usp=sharing` · **Slack workspace (to click approve yourself):** `https://join.slack.com/t/throw-testapp/shared_invite/zt-49tfonuhd-RKGR4dSaw8awIqgjYFjXBg`
 
 Recourse is an AI agent that works medical claim denials end to end. It reads the denial, the clinical note and the payer's policy, decides whether to **correct and resubmit, appeal, write off, bill the patient, or escalate to a physician**, then does the paperwork across **Gmail, Google Drive, Google Sheets, Google Calendar and Slack**. A human approves anything irreversible. Every decision was evaluated against 20 seeded scenarios, on a deterministic mock model and on the real one, before it sent a single real email.
 
