@@ -1,0 +1,256 @@
+[
+ {
+  "claim_id": "C-1001",
+  "patient_id": "P-3301",
+  "patient_name": "Anika Patel",
+  "member_id": "MER-88213-01",
+  "payer": "Meridian Health Plan",
+  "dos": "2026-07-14",
+  "cpt": [
+   "99214"
+  ],
+  "modifiers": [],
+  "icd10": [
+   "M54.50"
+  ],
+  "billed": 185.0,
+  "first_submitted": "2026-07-16",
+  "clearinghouse_ref": "CH-77A21",
+  "note_file": "notes/C-1001.md"
+ },
+ {
+  "claim_id": "C-1002",
+  "patient_id": "P-3302",
+  "patient_name": "Rotimi Okafor",
+  "member_id": "MER-90410-02",
+  "payer": "Meridian Health Plan",
+  "dos": "2026-07-22",
+  "cpt": [
+   "20610"
+  ],
+  "modifiers": [],
+  "icd10": [
+   "M17.12"
+  ],
+  "billed": 240.0,
+  "first_submitted": "2026-07-24",
+  "clearinghouse_ref": "CH-77B04",
+  "note_file": "notes/C-1002.md"
+ },
+ {
+  "claim_id": "C-1003",
+  "patient_id": "P-3303",
+  "patient_name": "Lucia Fernandes",
+  "member_id": "MER-11209-01",
+  "payer": "Meridian Health Plan",
+  "dos": "2026-08-03",
+  "cpt": [
+   "72148"
+  ],
+  "modifiers": [],
+  "icd10": [
+   "M54.16"
+  ],
+  "billed": 1450.0,
+  "first_submitted": "2026-08-05",
+  "clearinghouse_ref": "CH-78C11",
+  "note_file": "notes/C-1003.md"
+ },
+ {
+  "claim_id": "C-1004",
+  "patient_id": "P-3304",
+  "patient_name": "Thanh Nguyen",
+  "member_id": "MER-56002-03",
+  "payer": "Meridian Health Plan",
+  "dos": "2026-08-05",
+  "cpt": [
+   "72148"
+  ],
+  "modifiers": [],
+  "icd10": [
+   "M54.50"
+  ],
+  "billed": 1450.0,
+  "first_submitted": "2026-08-07",
+  "clearinghouse_ref": "CH-78C19",
+  "note_file": "notes/C-1004.md"
+ },
+ {
+  "claim_id": "C-1005",
+  "patient_id": "P-3305",
+  "patient_name": "Maya Haddad",
+  "member_id": "MER-33871-01",
+  "payer": "Meridian Health Plan",
+  "dos": "2026-06-30",
+  "cpt": [
+   "99213"
+  ],
+  "modifiers": [],
+  "icd10": [
+   "J06.9"
+  ],
+  "billed": 130.0,
+  "first_submitted": "2026-07-02",
+  "clearinghouse_ref": "CH-76D08",
+  "note_file": "notes/C-1005.md"
+ },
+ {
+  "claim_id": "C-1006",
+  "patient_id": "P-3306",
+  "patient_name": "Samuel Bright",
+  "member_id": "NS-4410-778",
+  "payer": "Northstar Advantage",
+  "dos": "2026-03-02",
+  "cpt": [
+   "99214"
+  ],
+  "modifiers": [],
+  "icd10": [
+   "E11.9",
+   "I10"
+  ],
+  "billed": 185.0,
+  "first_submitted": "2026-08-01",
+  "clearinghouse_ref": "CH-79E02",
+  "note_file": "notes/C-1006.md"
+ },
+ {
+  "claim_id": "C-1007",
+  "patient_id": "P-3307",
+  "patient_name": "Julia Alvarez",
+  "member_id": "MER-70115-02",
+  "payer": "Meridian Health Plan",
+  "dos": "2026-04-10",
+  "cpt": [
+   "99213"
+  ],
+  "modifiers": [],
+  "icd10": [
+   "K21.9"
+  ],
+  "billed": 130.0,
+  "first_submitted": "2026-04-20",
+  "clearinghouse_ref": "CH-74F31",
+  "note_file": "notes/C-1007.md"
+ },
+ {
+  "claim_id": "C-1008",
+  "patient_id": "P-3308",
+  "patient_name": "Daniel Kim",
+  "member_id": "MER-28840-01",
+  "payer": "Meridian Health Plan",
+  "dos": "2026-08-11",
+  "cpt": [
+   "99214",
+   "69210"
+  ],
+  "modifiers": [
+   "25",
+   ""
+  ],
+  "icd10": [
+   "I10",
+   "H61.23"
+  ],
+  "billed": 265.0,
+  "first_submitted": "2026-08-13",
+  "clearinghouse_ref": "CH-78G07",
+  "note_file": "notes/C-1008.md"
+ },
+ {
+  "claim_id": "C-1009",
+  "patient_id": "P-3309",
+  "patient_name": "Priya Rao",
+  "member_id": "MER-61932-04",
+  "payer": "Meridian Health Plan",
+  "dos": "2026-08-12",
+  "cpt": [
+   "99213"
+  ],
+  "modifiers": [],
+  "icd10": [
+   "L30.9"
+  ],
+  "billed": 130.0,
+  "first_submitted": "2026-08-14",
+  "clearinghouse_ref": "CH-78G22",
+  "note_file": "notes/C-1009.md"
+ },
+ {
+  "claim_id": "C-1011",
+  "patient_id": "P-3311",
+  "patient_name": "Elena Costa",
+  "member_id": "NS-9021-113",
+  "payer": "Northstar Advantage",
+  "dos": "2026-07-01",
+  "cpt": [
+   "93000"
+  ],
+  "modifiers": [],
+  "icd10": [
+   "R07.9"
+  ],
+  "billed": 95.0,
+  "first_submitted": "2026-07-03",
+  "clearinghouse_ref": "CH-77A40",
+  "note_file": "notes/C-1011.md"
+ },
+ {
+  "claim_id": "C-1012",
+  "patient_id": "P-3312",
+  "patient_name": "Omar Haddad",
+  "member_id": "MER-55120-01",
+  "payer": "Meridian Health Plan",
+  "dos": "2026-08-18",
+  "cpt": [
+   "36415"
+  ],
+  "modifiers": [],
+  "icd10": [
+   "E11.9"
+  ],
+  "billed": 18.0,
+  "first_submitted": "2026-08-19",
+  "clearinghouse_ref": "CH-90A12",
+  "note_file": "notes/C-1012.md"
+ },
+ {
+  "claim_id": "C-1013",
+  "patient_id": "P-3313",
+  "patient_name": "Grace Mwangi",
+  "member_id": "MER-61077-01",
+  "payer": "Meridian Health Plan",
+  "dos": "2026-08-21",
+  "cpt": [
+   "72148"
+  ],
+  "modifiers": [],
+  "icd10": [
+   "M54.16"
+  ],
+  "billed": 1450.0,
+  "first_submitted": "2026-08-22",
+  "clearinghouse_ref": "CH-90B44",
+  "note_file": "notes/C-1013.md"
+ },
+ {
+  "claim_id": "C-1014",
+  "patient_id": "P-3314",
+  "patient_name": "Victor Osei",
+  "member_id": "MER-70311-02",
+  "payer": "Meridian Health Plan",
+  "dos": "2026-08-24",
+  "cpt": [
+   "70450"
+  ],
+  "modifiers": [],
+  "icd10": [
+   "S06.0X0A",
+   "R40.20"
+  ],
+  "billed": 980.0,
+  "first_submitted": "2026-08-25",
+  "clearinghouse_ref": "CH-90C71",
+  "note_file": "notes/C-1014.md"
+ }
+]

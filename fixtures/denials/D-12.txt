@@ -1,0 +1,19 @@
+From: remittance@meridianhp.example
+To: billing@clearwaterfm.example
+Subject: Meridian Health Plan — Claim Adjustment Notice — Claim C-1012
+
+Remittance Date: 2026-09-01
+Payer Claim Control #: MER-ICN-2026-0901-1180
+Claim Number: C-1012
+Patient: HADDAD, OMAR
+Member ID Submitted: MER-55120-01
+Date of Service: 2026-08-18
+Procedure: 36415
+Billed: $18.00
+Paid: $0.00
+Denied Amount: $18.00
+CARC: CO-50
+RARC: N115
+Description: These are non-covered services because this is not deemed a 'medical necessity' by the payer. N115 — This decision was based on plan medical policy.
+
+Appeals must be filed within 180 days of the remittance date with supporting clinical documentation.

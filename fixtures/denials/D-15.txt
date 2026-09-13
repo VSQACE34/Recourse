@@ -1,0 +1,10 @@
+From: newsletter@meridianhp.example
+To: billing@clearwaterfm.example
+Subject: Meridian Provider Bulletin — September
+
+Dear provider,
+
+Our Provider Manual has been updated. Section 7.3 now clarifies imaging criteria. Please review at your convenience.
+
+Thank you,
+Meridian Provider Relations

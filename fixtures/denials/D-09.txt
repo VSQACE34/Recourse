@@ -1,0 +1,17 @@
+From: remittance@meridianhp.example
+To: billing@clearwaterfm.example
+Subject: Meridian Health Plan — Claim Adjustment Notice — Claim C-1009
+
+Remittance Date: 2026-08-29
+Payer Claim Control #: MER-ICN-2026-0829-9188
+Claim Number: C-1009
+Patient: RAO, PRIYA
+Member ID Submitted: MER-61932-04
+Date of Service: 2026-08-12
+Procedure: 99213
+Billed: $130.00
+Paid: $64.00
+Denied Amount: $40.00
+CARC: PR-3
+RARC:
+Description: Co-payment amount. Member responsibility.

@@ -1,0 +1,24 @@
+{
+  "Meridian Health Plan": {
+    "timely_filing_days_from_dos": 90,
+    "appeal_window_days_from_denial": 180,
+    "appeals_email": "provider.appeals@meridianhp.example",
+    "claims_email": "claims@meridianhp.example",
+    "policies": {
+      "50": "policies/meridian_medical_necessity.md",
+      "97": "policies/meridian_modifier25.md",
+      "29": "policies/meridian_timely_filing.md",
+      "197": "policies/meridian_prior_auth.md"
+    }
+  },
+  "Northstar Advantage": {
+    "timely_filing_days_from_dos": 120,
+    "appeal_window_days_from_denial": 60,
+    "appeals_email": "appeals@northstaradv.example",
+    "claims_email": "claims@northstaradv.example",
+    "policies": {
+      "50": "policies/northstar_medical_necessity.md",
+      "29": "policies/northstar_timely_filing.md"
+    }
+  }
+}

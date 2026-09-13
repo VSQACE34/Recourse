@@ -1,0 +1,19 @@
+From: remittance@meridianhp.example
+To: billing@clearwaterfm.example
+Subject: Meridian Health Plan — Claim Adjustment Notice — Claim C-1008
+
+Remittance Date: 2026-08-28
+Payer Claim Control #: MER-ICN-2026-0828-9042
+Claim Number: C-1008
+Patient: KIM, DANIEL
+Member ID Submitted: MER-28840-01
+Date of Service: 2026-08-11
+Procedure: 99214-25
+Billed: $185.00
+Paid: $0.00
+Denied Amount: $185.00
+CARC: CO-97
+RARC: M15
+Description: The benefit for this service is included in the payment/allowance for another service/procedure that has already been adjudicated (69210, paid $80.00). M15 — Separately billed services/tests have been bundled.
+
+Appeals must be filed within 180 days of the remittance date with the complete visit note.

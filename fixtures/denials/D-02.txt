@@ -1,0 +1,19 @@
+From: remittance@meridianhp.example
+To: billing@clearwaterfm.example
+Subject: Meridian Health Plan — Claim Adjustment Notice — Claim C-1002
+
+Remittance Date: 2026-08-16
+Payer Claim Control #: MER-ICN-2026-0816-1180
+Claim Number: C-1002
+Patient: OKAFOR, ROTIMI
+Member ID Submitted: MER-90410-02
+Date of Service: 2026-07-22
+Procedure: 20610
+Billed: $240.00
+Paid: $0.00
+Denied Amount: $240.00
+CARC: CO-4
+RARC: M20
+Description: The procedure code is inconsistent with the modifier used or a required modifier is missing. Laterality modifier (RT/LT) is required for this procedure.
+
+Corrected claims may be resubmitted electronically. Appeals must be filed within 180 days of the remittance date.

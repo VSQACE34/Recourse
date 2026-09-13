@@ -1,0 +1,19 @@
+From: remittance@meridianhp.example
+To: billing@clearwaterfm.example
+Subject: Meridian Health Plan — Claim Adjustment Notice — Claim C-1003
+
+Remittance Date: 2026-08-20
+Payer Claim Control #: MER-ICN-2026-0820-7734
+Claim Number: C-1003
+Patient: FERNANDES, LUCIA
+Member ID Submitted: MER-11209-01
+Date of Service: 2026-08-03
+Procedure: 72148
+Billed: $1,450.00
+Paid: $0.00
+Denied Amount: $1,450.00
+CARC: CO-50
+RARC: N115
+Description: These are non-covered services because this is not deemed a 'medical necessity' by the payer. N115 — This decision was based on a Local Coverage Determination / plan medical policy (Provider Manual §7.3).
+
+Appeals must be filed within 180 days of the remittance date with supporting clinical documentation.

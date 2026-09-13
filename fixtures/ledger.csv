@@ -1,0 +1,14 @@
+claim_id,patient_name,payer,dos,cpt,billed,status,paid_amount,paid_date,denial_ids,decision,last_action,next_deadline,notes
+C-1001,Anika Patel,Meridian Health Plan,2026-07-14,99214,185.00,submitted,,,,,,,
+C-1002,Rotimi Okafor,Meridian Health Plan,2026-07-22,20610,240.00,submitted,,,,,,,
+C-1003,Lucia Fernandes,Meridian Health Plan,2026-08-03,72148,1450.00,submitted,,,,,,,
+C-1004,Thanh Nguyen,Meridian Health Plan,2026-08-05,72148,1450.00,submitted,,,,,,,
+C-1005,Maya Haddad,Meridian Health Plan,2026-06-30,99213,130.00,paid,104.00,2026-07-20,,,,,Paid on first submission; second copy sent by clearinghouse in error 2026-07-28
+C-1006,Samuel Bright,Northstar Advantage,2026-03-02,99214,185.00,submitted,,,,,,,Found unsubmitted in a batch; sent late
+C-1007,Julia Alvarez,Meridian Health Plan,2026-04-10,99213,130.00,submitted,,,,,,,
+C-1008,Daniel Kim,Meridian Health Plan,2026-08-11,99214-25;69210,265.00,submitted,,,,,,,
+C-1009,Priya Rao,Meridian Health Plan,2026-08-12,99213,130.00,submitted,,,,,,,
+C-1011,Elena Costa,Northstar Advantage,2026-07-01,93000,95.00,submitted,,,,,,,
+C-1012,Omar Haddad,Meridian Health Plan,2026-08-18,36415,18.00,submitted,,,,,,,
+C-1013,Grace Mwangi,Meridian Health Plan,2026-08-21,72148,1450.00,submitted,,,,,,,Note not yet uploaded by front desk
+C-1014,Victor Osei,Meridian Health Plan,2026-08-24,70450,980.00,submitted,,,,,,,

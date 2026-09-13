@@ -1,0 +1,19 @@
+From: remittance@meridianhp.example
+To: billing@clearwaterfm.example
+Subject: Meridian Health Plan — Claim Adjustment Notice — Claim C-1001
+
+Remittance Date: 2026-08-14
+Payer Claim Control #: MER-ICN-2026-0814-5512
+Claim Number: C-1001
+Patient: PATEL, ANIKA
+Member ID Submitted: MER-88213-10
+Date of Service: 2026-07-14
+Procedure: 99214
+Billed: $185.00
+Paid: $0.00
+Denied Amount: $185.00
+CARC: CO-16
+RARC: N382
+Description: Claim/service lacks information or has submission/billing error(s). N382 — Missing/incomplete/invalid patient identifier. The member ID submitted is not on file.
+
+Corrected claims may be resubmitted electronically. Appeals must be filed within 180 days of the remittance date.

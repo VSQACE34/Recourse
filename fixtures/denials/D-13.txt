@@ -1,0 +1,19 @@
+From: era@northstaradv.example
+To: billing@clearwaterfm.example
+Subject: Northstar Advantage — Remittance Advice — Claim C-1011
+
+Remittance Date: 2026-07-12
+Payer Claim Control #: NSA-2026-0712-55817
+Claim Number: C-1011
+Patient: COSTA, ELENA
+Member ID Submitted: NSA-40921-00
+Date of Service: 2026-07-01
+Procedure: 93000
+Billed: $95.00
+Paid: $0.00
+Denied Amount: $95.00
+CARC: CO-50
+RARC: N115
+Description: These are non-covered services because this is not deemed a 'medical necessity' by the payer.
+
+Appeals must be received within 60 days of the remittance date.

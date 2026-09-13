@@ -1,0 +1,19 @@
+From: era@northstaradv.example
+To: billing@clearwaterfm.example
+Subject: Northstar Advantage — Remittance Advice — Claim C-1011
+
+Remittance Date: 2026-07-18
+Payer Claim Control #: NS-2026-0718-38870
+Claim Number: C-1011
+Patient: COSTA, ELENA
+Member ID Submitted: NS-9021-113
+Date of Service: 2026-07-01
+Procedure: 93000
+Billed: $95.00
+Paid: $0.00
+Denied Amount: $95.00
+CARC: CO-50
+RARC: N115
+Description: Not deemed a medical necessity. Screening ECG is not a covered benefit (Chapter 5.11).
+
+Provider appeals must be filed within 60 calendar days of the remittance date.

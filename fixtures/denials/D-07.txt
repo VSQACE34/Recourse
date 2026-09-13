@@ -1,0 +1,19 @@
+From: remittance@meridianhp.example
+To: billing@clearwaterfm.example
+Subject: Meridian Health Plan — Claim Adjustment Notice — Claim C-1007
+
+Remittance Date: 2026-08-18
+Payer Claim Control #: MER-ICN-2026-0818-6109
+Claim Number: C-1007
+Patient: ALVAREZ, JULIA
+Member ID Submitted: MER-70115-02
+Date of Service: 2026-04-10
+Procedure: 99213
+Billed: $130.00
+Paid: $0.00
+Denied Amount: $130.00
+CARC: CO-29
+RARC: N211
+Description: The time limit for filing has expired. No claim received within 90 days of the date of service.
+
+Appeals must be filed within 180 days of the remittance date with proof of timely filing.

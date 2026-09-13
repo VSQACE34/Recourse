@@ -1,0 +1,17 @@
+From: remittance@meridianhp.example
+To: billing@clearwaterfm.example
+Subject: Meridian Health Plan — Claim Adjustment Notice — Claim C-2099
+
+Remittance Date: 2026-09-01
+Payer Claim Control #: MER-ICN-2026-0901-0007
+Claim Number: C-2099
+Patient: DOE, JORDAN
+Member ID Submitted: MER-00000-99
+Date of Service: 2026-08-20
+Procedure: 99213
+Billed: $130.00
+Paid: $0.00
+Denied Amount: $130.00
+CARC: CO-16
+RARC: N382
+Description: Claim/service lacks information. N382 — Missing/incomplete/invalid patient identifier.

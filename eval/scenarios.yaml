@@ -1,0 +1,199 @@
+# Each scenario: fresh mocks, ingest the listed denials in order, auto-approve, then check.
+# `expect` refers to the LAST plan produced unless stated. today is frozen to 2026-09-13.
+
+- id: S01
+  name: Missing member ID -> correct & resubmit
+  denials: [D-01.txt]
+  expect:
+    decision: correct_resubmit
+    emails_sent: 1
+    email_to: claims@meridianhp.example
+    ledger_status: resubmitted
+    calendar_events: 0
+
+- id: S02
+  name: Laterality modifier missing -> correct & resubmit with LT
+  denials: [D-02.txt]
+  expect:
+    decision: correct_resubmit
+    correction_new: LT
+    emails_sent: 1
+    ledger_status: resubmitted
+
+- id: S03
+  name: MRI medical necessity, note meets all criteria -> appeal
+  denials: [D-03.txt]
+  expect:
+    decision: appeal
+    emails_sent: 1
+    email_to: provider.appeals@meridianhp.example
+    calendar_events: 1
+    ledger_status: appealed
+    urgent: false
+
+- id: S04
+  name: MRI medical necessity, note does NOT meet criteria -> physician review, no auto write-off
+  denials: [D-04.txt]
+  expect:
+    decision: escalate_physician
+    emails_sent: 0
+    chat_contains: "Physician review needed"
+    ledger_status: needs_review
+    calendar_events: 1
+
+- id: S05
+  name: Duplicate denial, ledger shows original paid -> close, no email
+  denials: [D-05.txt]
+  expect:
+    decision: close_duplicate
+    emails_sent: 0
+    calendar_events: 0
+    ledger_status: paid
+
+- id: S06
+  name: Timely filing, filed late, no proof -> write off (approval-gated)
+  denials: [D-06.txt]
+  expect:
+    decision: write_off
+    needs_approval: true
+    emails_sent: 0
+    ledger_status: written_off
+
+- id: S07
+  name: Timely filing but clearinghouse proof exists -> appeal with proof
+  denials: [D-07.txt]
+  expect:
+    decision: appeal
+    emails_sent: 1
+    email_contains: "CH-74F31"
+    ledger_status: appealed
+
+- id: S08
+  name: Bundled E/M (CO-97), note shows separately identifiable problem -> appeal (modifier 25)
+  denials: [D-08.txt]
+  expect:
+    decision: appeal
+    emails_sent: 1
+    email_contains: "distinct problem"
+    ledger_status: appealed
+
+- id: S09
+  name: Copay (PR-3) -> patient responsibility, no appeal
+  denials: [D-09.txt]
+  expect:
+    decision: patient_responsibility
+    emails_sent: 0
+    ledger_status: patient_balance
+
+- id: S10
+  name: Claim not on ledger -> escalate, touch nothing
+  denials: [D-10.txt]
+  expect:
+    decision: escalate
+    emails_sent: 0
+    calendar_events: 0
+    ledger_updates: 0
+    chat_contains: "not on the ledger"
+
+- id: S11
+  name: Appeal deadline in 3 days -> appeal flagged URGENT
+  denials: [D-11.txt]
+  expect:
+    decision: appeal
+    urgent: true
+    days_to_deadline: 3
+    calendar_events: 1
+    emails_sent: 1
+
+- id: S12
+  name: Same denial ingested twice -> second run is a no-op (idempotent)
+  denials: [D-03.txt, D-03.txt]
+  expect:
+    decision: noop
+    emails_sent: 1
+    calendar_events: 1
+    ledger_updates: 1
+
+- id: S13
+  name: Gmail fails once -> retried and succeeds, ledger updated
+  denials: [D-01.txt]
+  faults: {mail.send: 1}
+  expect:
+    decision: correct_resubmit
+    plan_status: executed
+    emails_sent: 1
+    email_attempts: 2
+    ledger_status: resubmitted
+
+- id: S14
+  name: Gmail fails twice -> plan fails, ledger NOT updated, team notified
+  denials: [D-01.txt]
+  faults: {mail.send: 2}
+  expect:
+    decision: correct_resubmit
+    plan_status: failed
+    emails_sent: 0
+    ledger_updates: 0
+    chat_contains: "FAILED"
+
+- id: S15
+  name: Rejected plan executes nothing
+  denials: [D-03.txt]
+  reject: true
+  expect:
+    decision: appeal
+    plan_status: rejected
+    emails_sent: 0
+    calendar_events: 0
+    ledger_updates: 0
+
+- id: S16
+  name: Medical-necessity denial below the appeal threshold ($18) -> write off, not worth staff time
+  denials: [D-12.txt]
+  expect:
+    decision: write_off
+    needs_approval: true
+    emails_sent: 0
+    calendar_events: 0
+    ledger_status: written_off
+
+- id: S17
+  name: Appeal window already closed (60-day payer, 3 days late) -> write off, no letter sent
+  denials: [D-13.txt]
+  expect:
+    decision: write_off
+    emails_sent: 0
+    calendar_events: 0
+    ledger_status: written_off
+    chat_contains: "Appeal window closed"
+
+- id: S18
+  name: Clinical note missing from Drive -> escalate to billing, nothing sent
+  denials: [D-14.txt]
+  expect:
+    decision: escalate
+    emails_sent: 0
+    ledger_status: needs_review
+    chat_contains: "missing from Drive"
+
+- id: S19
+  name: Unrelated email in the denials label -> flagged, left in inbox, world untouched
+  denials: [D-15.txt]
+  expect:
+    decision: null
+    emails_sent: 0
+    calendar_events: 0
+    ledger_updates: 0
+    inbox_unread: 1
+    chat_contains: "Could not parse"
+
+- id: S20
+  name: No prior auth (CO-197) but note documents an emergency -> appeal under the emergency exception
+  denials: [D-16.txt]
+  expect:
+    decision: appeal
+    emails_sent: 1
+    email_contains: "unsafe delay"
+    calendar_events: 1
+    docs_saved: 1
+    ledger_status: appealed

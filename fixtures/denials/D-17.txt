@@ -1,0 +1,19 @@
+From: provider.services@meridianhp.example
+To: billing@clearwaterfm.example
+Subject: Notice of claim determination for your patient Lucia Fernandes
+
+Dear Provider,
+
+We have completed our review of the claim you submitted for services rendered to Lucia Fernandes
+(member MER-11209-01) on August 3, 2026, under your claim reference C-1003. The service billed,
+CPT 72148 (MRI lumbar spine without contrast), in the amount of $1,450.00, has been denied in full.
+
+Reason for determination: the service is not considered medically necessary under our medical
+policy (adjustment reason CO-50, remark N115). Our reference number for this determination is
+MER-ICN-2026-0820-7734 and the determination date is August 20, 2026.
+
+You may request reconsideration within 180 days of this notice by submitting supporting clinical
+documentation to provider.appeals@meridianhp.example.
+
+Sincerely,
+Meridian Health Plan Provider Services

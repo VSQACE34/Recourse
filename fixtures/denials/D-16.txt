@@ -1,0 +1,19 @@
+From: remittance@meridianhp.example
+To: billing@clearwaterfm.example
+Subject: Meridian Health Plan — Claim Adjustment Notice — Claim C-1014
+
+Remittance Date: 2026-09-08
+Payer Claim Control #: MER-ICN-2026-0908-3345
+Claim Number: C-1014
+Patient: OSEI, VICTOR
+Member ID Submitted: MER-70311-02
+Date of Service: 2026-08-24
+Procedure: 70450
+Billed: $980.00
+Paid: $0.00
+Denied Amount: $980.00
+CARC: CO-197
+RARC: N54
+Description: Precertification/authorization/notification/pre-treatment absent. N54 — Claim information is inconsistent with pre-certified/authorized services (Provider Manual §5).
+
+Appeals must be filed within 180 days of the remittance date with supporting clinical documentation.
