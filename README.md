@@ -1,156 +1,192 @@
-# Denial Agent — rehearsal build
+# Recourse — every denied claim gets its recourse
 
-An agent that works medical claim denials: reads the denial, pulls the claim, note and payer policy,
-decides **correct & resubmit / appeal / write off / escalate**, drafts the letter, books the deadline,
-updates the ledger, and asks a human before doing anything irreversible.
+**Live demo:** `https://<your-railway-domain>` · **Demo video (2 min):** `<video link>` · **Slack workspace (to click approve yourself):** `<invite link>`
 
-Apps: **Gmail** (denials in, appeals out) · **Google Drive** (reads notes, claims, policies; writes every
-letter to `appeals/` before it is sent) · **Google Sheets** (claim ledger) · **Google Calendar** (appeal
-deadlines) · **Slack** (approval gate, escalations, daily summary).
+Recourse is an AI agent that works medical claim denials end to end. It reads the denial, the clinical note and the payer's policy, decides whether to **correct and resubmit, appeal, write off, bill the patient, or escalate to a physician**, then does the paperwork across **Gmail, Google Drive, Google Sheets, Google Calendar and Slack**. A human approves anything irreversible. Every decision was evaluated against 20 seeded scenarios, on a deterministic mock model and on the real one, before it sent a single real email.
 
-This is the *rehearsal* repo. Tonight you rebuild it from a blank folder using this as the design;
-the fixtures and the setup you do today are reusable regardless of the rules.
+Built solo by George A. Johny for the Multi-App AI Agent Hackathon (Lemma × Comma Capital, judged by Arga Labs), 13 September 2026.
 
-```
-fixtures/         denials (17 emails incl. one letter-style + one non-denial), notes, claims, patients, payer policies, ledger.csv
-agent/
-  models.py       Denial / Claim / Decision / Plan / Action
-  denial_parser.py  email -> Denial (regex first; LLM extraction fallback for free-text letters, see D-17)
-  triage.py       THE decision engine: rule cascade + LLM only for judgement calls
-  llm.py          GroqLLM / OpenAICompatLLM (OpenRouter, Groq, OpenAI, Ollama) + MockLLM (deterministic, offline)
-  drafting.py     appeal letter / resubmission cover / escalation text (templates, no free generation)
-  planner.py      Decision -> ordered idempotent actions (email -> calendar -> ledger -> chat)
-  executor.py     approval gate, retry once, fail-stop, failure notice
-  pipeline.py     orchestration + plan registry
-  tools/base.py   the 5 interfaces;  tools/mock.py (stateful replicas + fault injection);
-                  tools/google_apps.py, tools/slack_app.py (real adapters)
-app/main.py       FastAPI: / (dashboard) /ingest /ingest-fixture/{name} /poll /plans/{id}/approve
-                  /slack/interactions /slack/poll-reactions /report /report/slack /traces/{id}
-app/dashboard.html worklist UI: decision stamp, rule trace, draft letter, approve/reject — use it in the demo
-eval/             scenarios.yaml (20 cases) + run_eval.py -> results.md + traces/
-scripts/          seed_google.py (mirror fixtures to Drive/Sheets/Gmail), smoke_google.py
-```
+---
 
-## Run it now (no credentials)
+## 01 · Project overview
+
+### The problem
+
+A denied claim is a payer refusing to pay for care that has already been delivered. Working one means reading the reason code, finding the clinical note, checking the payer's policy, drafting a letter, tracking a deadline and updating a ledger: about twenty minutes of skilled staff time per claim.
+
+The scale of it, from industry sources compiled in 2026:
+
+- **11.8%** of claims are denied on first submission (Experian Health, 2024 all-payer rate), up from 10.2% in 2020.
+- **~70%** of denials that are appealed get overturned and paid (Premier Inc.).
+- **65%** of denied claims are never resubmitted or appealed at all (MGMA / AHA).
+- **$25–$118** staff cost to rework one denial; **$57.23** average administrative cost per denied claim in 2023 (CAQH / Premier).
+- The three most common denial codes are CARC 197 (no prior authorisation), 11 (diagnosis inconsistent with procedure) and 16 (missing information).
+
+Put together: the money is recoverable, the process to recover it is well understood, and most of it is still written off because a triage task sits between the denial and the appeal.
+
+### What exists today
+
+The denial-management market splits into three kinds of product:
+
+1. **Prediction and prevention** (Waystar, Experian Health, FinThrive, AKASA): score claims before submission so staff fix them first. Good for the 60–70% of denials that are avoidable; does nothing for the ones that arrive.
+2. **Appeal drafting** (most "AI denials" modules, AppealGen for patients): generate the letter fast; a human still triages, decides and sends.
+3. **Queue-working agents** (Waystar's denials module, DataRovers, CombineHealth, Ventus): autonomously work denials, but enterprise-priced, EHR-integrated, and sold to hospital systems. Rivet Resolve targets smaller practices but is still a platform to adopt.
+
+What none of them do visibly: decide *not* to appeal and say why, show which rule made the decision, or publish how the agent was tested before it touched a real inbox. And the long tail — the small practice running on Gmail and a spreadsheet — has no option at all.
+
+### How Recourse helps
+
+- **It triages, not just drafts.** Five outcomes, including "this is not worth appealing" and "a physician needs to look at this", with the reason on the card.
+- **Rules decide the category and the arithmetic; the model only reads.** Duplicates, timely-filing maths, appeal windows, dollar thresholds and member-ID mismatches are deterministic. The language model is called for exactly two reading tasks — does this note meet this policy's criteria, and what is the one concrete fix for a rejected claim — and it must quote the note. Every rule that fired is shown on the Slack card and the dashboard.
+- **It acts across the tools a small practice already has.** No EHR integration: Gmail, Drive, Sheets, Calendar, Slack.
+- **A human signs anything irreversible.** Emails and write-offs wait for an approve click, in Slack or on the dashboard.
+- **It proves what it did.** After execution the app reads back from each API — the sent message from Gmail, the sheet row, the calendar event, the Drive file, the Slack permalink — and shows the receipts.
+
+### What it looks like
+
+`/` is the landing page with the story. `/app` is the worklist: a decision stamp per denial, the rules that fired, the drafted letter, approve/reject, receipts, and an evidence panel with live view-only embeds of the ledger sheet, the calendar, the Drive folder and the Slack channel. `/eval` is the results table.
+
+---
+
+## 02 · External apps used
+
+| App | Reads | Writes |
+|---|---|---|
+| **Gmail** | Denial notices under the `denials` label (regex parse; LLM extraction fallback for letter-style mail) | Appeal and resubmission emails to the payer; `denials-processed` label |
+| **Google Drive** | Clinical notes, original claims, patient records, payer policy documents | Every letter to `appeals/<claim>_<control#>_<kind>.txt`, *before* the email is sent |
+| **Google Sheets** | The claim ledger (status, decision, processed denial IDs, deadlines) | Ledger row per claim, written last so it can never claim an email that wasn't sent |
+| **Google Calendar** | Existing deadline events (idempotency check) | Appeal deadline with reminder; flagged urgent under 14 days |
+| **Slack** | Button clicks (Socket Mode) and ✅/❌ reactions; channel history for the dashboard feed | Approval cards, physician escalations, failure notices, daily summary |
+
+The LLM is Groq (`openai/gpt-oss-120b`); any OpenAI-compatible endpoint works via env vars.
+
+---
+
+## 03 · Setup instructions
+
+### Run it in two minutes, no credentials (mock apps, deterministic model)
 
 ```bash
+git clone <repo> && cd recourse
+python -m venv .venv && source .venv/bin/activate      # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
-python -m eval.run_eval                 # 20/20 with the mock LLM
-AGENT_TODAY=2026-09-13 TOOLS=mock uvicorn app.main:app --reload
-open http://localhost:8000              # dashboard: pick D-03.txt -> Ingest fixture -> Approve and execute
-curl -X POST localhost:8000/ingest-fixture/D-04.txt   # or drive it from the command line
-curl localhost:8000/plans ; curl -X POST localhost:8000/plans/<id>/approve ; curl localhost:8000/mock/state
+python -m eval.run_eval                                  # expect 20/20
+uvicorn app.main:app --reload                            # http://localhost:8000
 ```
 
-## Test the real model
+Open the worklist, ingest `D-03.txt` (clean appeal), then `D-04.txt` (same code, thin note → physician), `D-13.txt` (closed window → write-off), `D-15.txt` (a newsletter → ignored). Approve one and expand *Receipts*.
 
-Any OpenAI-compatible endpoint works; pick whichever key you have to hand:
+### Run it with a real model
 
-```bash
-# OpenRouter
-LLM_PROVIDER=openai_compat LLM_BASE_URL=https://openrouter.ai/api/v1 LLM_API_KEY=$OPENROUTER_API_KEY \
-LLM_MODEL=meta-llama/llama-3.3-70b-instruct python -m eval.run_eval S01 S02 S03 S04 S07 S08 S11
-# Groq (SDK)
-LLM_PROVIDER=groq GROQ_API_KEY=... python -m eval.run_eval S01 S02 S03 S04 S07 S08 S11
-# Ollama (offline mode for the demo story)
-LLM_PROVIDER=openai_compat LLM_BASE_URL=http://localhost:11434/v1 LLM_API_KEY=ollama LLM_MODEL=llama3.1 python -m eval.run_eval S03 S04
 ```
-S03/S04/S08/S20 are the judgement cases, and D-17.txt (a letter-style denial with no field labels) exercises
-the LLM extraction fallback — ingest it from the dashboard with a real model to show free-text parsing. If the model is wobbly on S04 (it should *not* support the
-10-day back pain MRI), tighten `ASSESS_SYSTEM` in `agent/llm.py` — that prompt is the whole
-"reliability" story, iterate on it today, not tonight.
+LLM_PROVIDER=groq
+GROQ_API_KEY=gsk_...
+GROQ_MODEL=openai/gpt-oss-120b
+```
 
-## Set up the real apps (do this today)
+Copy `.env.example` to `.env`, fill those in, and `python -m eval.run_eval` again. Any OpenAI-compatible endpoint also works: `LLM_PROVIDER=openai_compat` with `LLM_BASE_URL`, `LLM_API_KEY`, `LLM_MODEL`.
 
-**Google (one project, one consent screen, four APIs)** — scopes are gmail.modify, drive (full, so the agent
-can write letters back), spreadsheets, calendar.events. If you already have a `token.json` from an earlier
-scope set, delete it and re-consent.
-1. console.cloud.google.com → new project `denial-agent` → APIs & Services → enable **Gmail API,
-   Drive API, Sheets API, Calendar API**.
-2. OAuth consent screen → External → add yourself as a test user → scopes: leave default (the app
-   requests them at runtime).
-3. Credentials → Create → OAuth client ID → **Desktop app** → download JSON → save as `credentials.json`.
-4. `cp .env.example .env`, fill `PRACTICE_EMAIL` with your Gmail, then:
+### Run it against real Google Workspace and Slack
+
+**Google** — one Cloud project, four APIs, one Desktop OAuth client.
+1. console.cloud.google.com → new project → APIs & Services → enable **Gmail, Drive, Sheets, Calendar** APIs.
+2. OAuth consent screen → External → add your Gmail as a **test user**.
+3. Credentials → OAuth client ID → **Desktop app** → download → save as `credentials.json` in the project root.
+4. Set `PRACTICE_EMAIL` in `.env`, then seed the account with the fixtures (opens the browser for consent, writes `token.json`, prints the IDs to put in `.env`):
    ```bash
    python -m scripts.seed_google --drive --sheet --email you@gmail.com
    ```
-   First run opens the browser for consent and writes `token.json`. It prints `DRIVE_FOLDER_ID`
-   and `SHEET_ID` → put them in `.env`.
-5. In Gmail: create label `denials`; create a filter (subject has `Claim Adjustment Notice` OR
-   `Remittance Advice` OR `claim determination` → apply label `denials`). Re-run `--email` if the first
-   batch missed the filter. The agent creates `denials-processed` itself and uses it, not read/unread
-   state, to know what's pending — so opening a denial in Gmail doesn't hide it from the agent.
+5. In Gmail, create a label `denials` and apply it to the seeded emails (plus a filter on subject `Claim Adjustment Notice` / `Remittance Advice` / `claim determination` for future ones). The agent tracks pending work with its own `denials-processed` label, not read/unread state.
 
 **Slack**
-1. api.slack.com/apps → Create → From scratch → in a throwaway workspace.
-2. OAuth & Permissions → Bot Token Scopes: `chat:write`, `chat:write.public` → Install → copy
-   `xoxb-` token → `.env`. Basic Information → Signing Secret → `.env`.
-3. Create channel `#billing-denials`, invite the bot (`/invite @DenialAgent`).
-4. **Buttons (needs a tunnel):** Interactivity & Shortcuts → On → Request URL
-   `https://<tunnel>/slack/interactions`. Use `ngrok http 8000` (or cloudflared).
-5. **Reactions (no tunnel — the fallback):** add scope `reactions:read`, reinstall the app. React ✅ or ❌
-   on the approval card, then `curl -X POST localhost:8000/slack/poll-reactions`, or run the app with
-   `APPROVAL_POLL_SECONDS=10` and it polls itself. Test it offline first:
-   `curl -X POST localhost:8000/mock/react/<plan_id>/white_check_mark && curl -X POST localhost:8000/slack/poll-reactions`.
-   If ngrok misbehaves tonight, demo with reactions — it reads as "human in the loop" just as well.
+1. api.slack.com/apps → Create New App → From scratch.
+2. OAuth & Permissions → Bot Token Scopes: `chat:write`, `chat:write.public`, `reactions:read`, `channels:read`, `channels:history` → Install → copy the `xoxb-` token to `.env` as `SLACK_BOT_TOKEN`.
+3. Settings → Socket Mode → On → create an app-level token with `connections:write` → `.env` as `SLACK_APP_TOKEN`. Features → Interactivity → On (no URL needed). This makes the approval buttons work with no public URL.
+4. Create `#billing-denials` and `/invite @Recourse`.
 
-**Verify**
+**Verify and run**
 ```bash
-TOOLS=google python -m scripts.smoke_google        # one call per app
-TOOLS=google LLM_PROVIDER=groq uvicorn app.main:app
-curl -X POST localhost:8000/poll                   # real inbox -> real plans -> Slack buttons
+TOOLS=google python -m scripts.smoke_google     # one call per app
+TOOLS=google uvicorn app.main:app --reload      # then Poll inbox on the worklist
+python -m scripts.reset_google --calendar       # restore ledger + inbox between demo runs
 ```
 
-## Reliability design (this is the brief)
+### Hosting
 
-- **Rules decide the category, the LLM decides only judgement.** CARC 18/29/45/PR and deadlines are
-  arithmetic; the model is called only to read a note against a policy or find a concrete fix.
-- **Every rule that fires is recorded** (`Decision.rule_trace`) and shown in the Slack approval card.
-- **Safe failure:** unparseable model output → low-confidence assessment → escalate, never act.
-- **Approval gate:** emails and write-offs are `irreversible` → plan waits for a Slack click.
-- **Ordering:** email → calendar → ledger → chat. The ledger is written last, so it can never say
-  "sent" when nothing was sent. A failed plan leaves the ledger untouched and is safe to re-run.
-- **Idempotency:** every action has a key (`<denial control #>:<action>`); Calendar uses a private
-  extended property, Gmail a local key store; the ledger records processed denial IDs so a
-  re-ingested denial is a no-op.
-- **Own record first:** the letter is written to Drive (`appeals/<claim>_<control#>_<kind>.txt`) before the
-  email goes out, so there is always a copy of exactly what was sent.
-- **Economics and time are rules, not vibes:** below `MIN_APPEAL_AMOUNT` → write off; appeal window
-  expired → write off; both gated behind approval, both visible in the rule trace.
-- **Unparseable mail is left alone:** the regex parser tries first, then the LLM extractor; if neither
-  finds a claim number and a CARC, the message stays in the inbox and the team is told.
-- **Evaluation:** 20 seeded scenarios against stateful mocks with fault injection; `eval/results.md`
-  is the table; `traces/*.jsonl` are the per-scenario step logs.
-- **Submission brief:** `docs/reliability_brief.md` is the one-page template — fill in tonight's numbers.
+`Procfile` and `render.yaml` are included. On Railway or Render: connect the repo, set the variables from `.env.example`, and paste the contents of `token.json` into `GOOGLE_TOKEN_JSON` (the app writes it to disk at startup). Share the ledger sheet and Drive folder as *anyone with the link, viewer* and make the calendar public so the evidence panel can embed them; set `SLACK_INVITE_URL` for the join link.
 
-## Tonight — build order (10:00 PM → 4:30 AM IST)
+### Layout
 
-| Slot | Do | Cut if late |
-|---|---|---|
-| 10:00–10:20 | Blank repo, `.env`, fixtures copied in, `models.py` | — |
-| 10:20–11:00 | `denial_parser.py`, `triage.py` rules only (no LLM yet), `planner.py` | — |
-| 11:00–11:40 | `tools/base.py` + `mock.py`, `executor.py`, `pipeline.py`, first eval run | — |
-| 11:40–12:20 | `llm.py` with Groq, run S03/S04/S08 against the real model | — |
-| 12:20–1:30 | Real adapters: Gmail, Sheets, Slack (reactions first, buttons if ngrok is up) | Calendar; Drive write (keep Drive read, or read fixtures from disk) |
-| 1:30–2:15 | End-to-end on real apps with D-03, D-01, D-06, D-10; fix what breaks | — |
-| 2:15–3:00 | Full eval run, write `results.md`, screenshot dashboard + Slack card + sheet | dashboard (curl works) |
-| 3:00–3:45 | Record 2-min demo (script below), write reliability brief (1 page from this README) | polish |
-| 3:45–4:30 | README, push, submit; buffer | — |
+```
+agent/
+  denial_parser.py  email -> Denial (regex; LLM extraction fallback)
+  triage.py         the decision engine: rule cascade R1–R9, model only for judgement
+  llm.py            Groq / OpenAI-compatible clients + deterministic MockLLM
+  drafting.py       appeal letter, resubmission cover, escalation text (templates)
+  planner.py        Decision -> ordered idempotent actions (Drive -> Gmail -> Calendar -> Sheets -> Slack)
+  executor.py       approval gate, retry once, fail-stop, failure notice
+  pipeline.py       orchestration, plan registry, dedup, reaction polling, receipts, reports
+  tools/            base.py (5 interfaces) · mock.py (stateful replicas + fault injection) · google_apps.py · slack_app.py · slack_socket.py
+app/                main.py (FastAPI) · landing.html · dashboard.html
+eval/               scenarios.yaml (20) · run_eval.py · results.md
+fixtures/           17 denial emails, notes, claims, patients, 4 payer policies, ledger.csv
+scripts/            seed_google.py · smoke_google.py · reset_google.py
+docs/               reliability_brief.md
+```
 
-Rule of the night: **three real apps + green eval table** beats five apps and a hand-wave.
-Gmail + Sheets + Slack is the minimum; Calendar is 20 minutes if there's time; Drive last.
+---
 
-## Demo script (2 minutes)
+## 04 · Reliability testing
 
-1. (10s) "Denied claims are the biggest revenue leak in a clinic, and most never get worked."
-2. (30s) Dashboard open. Denial email lands → *Poll inbox* → row appears with the stamp *appeal*,
-   the rules that fired, and the drafted letter quoting the note. Same card is in Slack.
-3. (20s) *Approve and execute* → letter in Drive `appeals/`, appeal in Gmail Sent, calendar deadline,
-   ledger row flips to `appealed`. Steps tick off on the row.
-4. (25s) The judgement: D-04 same code, thin note → *escalate physician*, nothing sent. D-16 no prior
-   auth but the note documents an emergency → appeal under the policy's exception. D-13 window closed
-   → write-off, gated. D-15 newsletter in the denials label → untouched.
-5. (25s) `eval/results.md`: 20 scenarios incl. duplicate ingestion, Gmail outage, rejected plan,
-   missing note, garbage mail. Open one trace. *Post summary to Slack* → dollars by decision.
-6. (10s) "Rules decide the category, the model decides only judgement, a human approves anything
-   irreversible."
+### Design choices that make it safe to let it act
+
+| Property | Mechanism |
+|---|---|
+| Never acts on a claim it can't find | R1: unknown claim → escalate, zero side effects |
+| Never double-works a denial | Plan-level dedup on ingest; ledger records processed denial IDs; re-checked at approval time |
+| Never appeals on thin evidence | Model must quote the note; confidence < 0.70 → physician review, never an automatic write-off |
+| Never sends without a human | Emails and write-offs are `irreversible` → Slack buttons / reactions / dashboard approve |
+| Ledger can't lie | Action order Drive → Gmail → Calendar → Sheets → Slack; ledger written last; a failed plan leaves it untouched |
+| Failures are visible | Retry once, then stop, mark the plan failed, notify the channel with the failed step |
+| Model garbage can't cause action | Unparseable JSON → confidence 0 → escalate |
+| Economics and deadlines are arithmetic | Below-threshold and expired-window denials are written off by rule, gated, and traced |
+| Non-denials can't trigger anything | No claim number + CARC → message left in inbox, team told |
+| Every step is replayable | Idempotency keys on every side effect; JSONL trace per run (`traces/`) |
+| It proves what it did | Read-after-write receipts from each API on every executed plan |
+
+### The evaluation
+
+`python -m eval.run_eval` runs 20 seeded scenarios against stateful replicas of the five apps with fault injection. Each scenario starts from a clean world, ingests one or two denial emails, and asserts the decision, the number of emails sent, calendar events, ledger updates, plan status, and message contents.
+
+| Category | Scenarios |
+|---|---|
+| Coding fixes | S01 member ID mismatch (deterministic rule) · S02 missing laterality modifier (model reads the note) |
+| Judgement | S03 criteria met → appeal · S04 criteria not met → physician, no write-off · S08 bundled E/M with separate problem → modifier 25 appeal · S20 no prior auth but documented emergency → appeal under the policy exception |
+| Arithmetic | S05 duplicate, original paid · S06 late filing, no proof → write off · S07 late filing with clearinghouse proof → appeal · S09 copay → patient · S11 deadline in 3 days → urgent · S16 $18 below threshold → write off · S17 window closed 3 days ago → write off |
+| Safety | S10 claim not on ledger → touch nothing · S18 note missing → escalate · S19 newsletter in the denials label → left alone · S15 rejected plan executes nothing |
+| Idempotency and faults | S12 same denial twice → one email · S13 Gmail fails once → retried, ledger updated · S14 Gmail fails twice → ledger untouched, team notified |
+
+**Results:** 20/20 on the deterministic mock model · 20/20 on Groq `openai/gpt-oss-120b`. Table in [`eval/results.md`](eval/results.md), rendered at `/eval` on the live app; per-scenario traces in `traces/`.
+
+### What the eval changed
+
+Two findings during rehearsal changed the design, which is the point of having one:
+
+1. **S02 failed on the real model** because the correction prompt asked for a bare `null` when no fix exists, which the provider's JSON mode rejects, and because a *missing* modifier has no "old" value. The contract was fixed to an object-only shape and the parser made tolerant. The failure mode was already correct (escalate), but the answer was wrong.
+2. **S14 failed once in three runs** because the model returned no correction for a member-ID mismatch on identical input. A member-ID mismatch is a comparison, not a reading task, so it became rule **R7a** and the model is no longer asked. This is the general principle of the system: when the model is wrong on something deterministic, take the decision away from it rather than prompt harder.
+
+The full one-page brief is in [`docs/reliability_brief.md`](docs/reliability_brief.md).
+
+---
+
+## 05 · Demo video and demo link
+
+**https://drive.google.com/file/d/1T3uX4osRruquVy6-LAfcN0IZ-4IDy0cg/view?usp=sharing** (under two minutes)
+
+demo link : - web-production-ac091.up.railway.app
+
+---
+
+## Limitations and next steps
+
+Policies are read as text, not structured rules. Only CARC codes with a rule are handled; everything else escalates, by design. Appeal outcomes are not yet tracked back into the ledger. Plans live in memory (restart clears them; the ledger and inbox are the durable state). Next: payer-specific appeal templates, second-level appeals, learning thresholds from which appeals actually got paid, and running the same scenario set nightly against replayed production traffic.
